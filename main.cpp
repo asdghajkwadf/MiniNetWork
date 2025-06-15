@@ -17,10 +17,10 @@
 int main(int)
 {
 
-    DataLoader* dataLoader = new DataLoader("D:/DATA/NetWork/data", 2);
+    DataLoader* dataLoader = new DataLoader("D:/DATA/NetWork/data", 16);
 
 
-    dataLoader->readfile(100);
+    dataLoader->readfile(50);
 
     PicImporve::Normalization(dataLoader);
     PicImporve::Padding(dataLoader, 1);
@@ -56,8 +56,7 @@ int main(int)
     net.AddLayer(sm);
 
     
-
-    net.train(300, 0.01, dataLoader);
+    net.train(100, 0.01, dataLoader);
     net.test(dataLoader);
     
     return 0;

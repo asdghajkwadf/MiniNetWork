@@ -159,7 +159,8 @@ void NetWork::Train_backword(Batch* batch)
 
 void NetWork::printLoss()
 {
-    std::cout << static_cast<SoftMax*>(_layer.back())->loss_sum << endl;
+    static int times = 0;
+    std::cout << times << ": " <<static_cast<SoftMax*>(_layer.back())->loss_sum << endl;
 }
 
 void NetWork::forword()

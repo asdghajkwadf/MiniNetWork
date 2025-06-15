@@ -190,11 +190,6 @@ DataLoader::DataLoader(const string& root_path, int batch_size)
     this->Batch_size = batch_size;
 }
 
-DataLoader::DataLoader(const DataLoader& obj)
-{
-
-}
-
 DataLoader::~DataLoader()
 {
     clear();
