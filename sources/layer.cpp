@@ -57,31 +57,6 @@ Layer::~Layer()
     }
 }
 
-double Layer::ActiveFunc(double input)
-{
-    if (activeFunctype == ActivationFuncType::None)
-    {
-        return input;
-    }
-    else if(activeFunctype == ActivationFuncType::ReLU)
-    {
-        return ActivationFunction::ReLU(input);
-    }
-}
-
-double Layer::D_ActiveFunc(double input)
-{
-    if (activeFunctype == ActivationFuncType::None)
-    {
-        return input;
-    }
-    else if(activeFunctype == ActivationFuncType::ReLU)
-    {
-        return D_ActivationFunction::DReLU(input);
-    }
-}
-
-
 
 
 

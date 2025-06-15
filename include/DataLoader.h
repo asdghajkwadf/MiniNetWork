@@ -66,56 +66,50 @@ struct Batch
 class DataLoader
 {
 public:
-    string root_path = "";
+	string root_path = "";
+	DataLoader(const string& root_path, int batch_size); // batch_size用于规定训练时的批次，可以加快训练榨干GPU
+	DataLoader(const DataLoader& obj) = delete;
+	~DataLoader();  
+	
+	// 用户可以继承DataLoader自己读取数据，定义了两个虚函数
+	virtual void readfile(unsigned int limit = 0, bool shuffle = true); // 读取每个类别多少个数据(默认全部读取)
+	virtual void splitSample(float rate = 0.75);
+	
+	// 表示第一层输入的数据维度
+	int rows = 28; int cols = 28;  
+	int sample_channel = 1;  
 
-    DataLoader(const string& root_path, int batch_size);
-    ~DataLoader();
+	// 获取batch的数据
+	// getBatch会将需要用到的样本一整个批次转化为一个Onion
+	Batch* getBatch();
+	int _Batch_Size();
 
-    DataLoader(const DataLoader& obj);
-
-    virtual void readfile(unsigned int limit = 0, bool shuffle = true); // 读取每个类别多少个数据(默认全部读取)
-    virtual void splitSample(float rate = 0.75);
-    
-    int rows = 28; int cols = 28;
-
-    Batch* getBatch();
-    int _Batch_Size();
-
-    PicSample* getTestSample();
-    int getTestSampleNum();
-
-    vector<PicSample*>* Sample();
-    void initBatch();
-
-    void clear();
-    
-    int class_num = 0;
-
-    int sample_channel = 1;
+	
+	PicSample* getTestSample();
+	int getTestSampleNum(); 
+	vector<PicSample*>* Sample();
+	
+	// 初始化Batch
+	void initBatch();  
+	void clear();
+	int class_num = 0;  
 
 private:
+	Batch* batch = nullptr;  
+	int Batch_size = 0; 
 
-    Batch* batch = nullptr;
-
-    int Batch_size = 0;
-
-    void find();
-
-    vector<string>* all_class = nullptr;
-
-    vector<vector<string>*>* _path = nullptr;
-
-    vector<PicSample*>* _sample = nullptr;
-
-    vector<PicSample*>* _TrainSample = nullptr;
-    vector<PicSample*>* _TestSample = nullptr;
-
-    int sample_num = 0;
-
-
-    int _one_class_num = 0;
+	// 找出用户给出数据集目录中的文件
+	void find();  
+	
+	// 存放各种样本的数据信息
+	vector<string>* all_class = nullptr;  
+	vector<vector<string>*>* _path = nullptr;  
+	vector<PicSample*>* _sample = nullptr;  
+	vector<PicSample*>* _TrainSample = nullptr;
+	vector<PicSample*>* _TestSample = nullptr;  
+	int sample_num = 0; 
+	int _one_class_num = 0;
 };
-
 
 
 #endif

@@ -123,7 +123,7 @@ double Onion::operator[](int index)
     }
 }
 
-inline double Onion::get(const unsigned int index)
+inline double Onion::get(const unsigned int index) const
 {
     if (_data != nullptr)
     {
@@ -138,7 +138,7 @@ inline double Onion::get(const unsigned int index)
     }
 }
 
-inline double Onion::set(const unsigned int index, double data)
+inline double Onion::set(const unsigned int index, double data) const
 {
     if (_data != nullptr)
     {

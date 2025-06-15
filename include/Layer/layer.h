@@ -32,47 +32,36 @@ enum ModelType : unsigned char
 class Layer
 {
 public:
+	// 网络运行时所需要的各层的数据
+	Onion* batch_output = nullptr; 
+	Onion* batch_input = nullptr;
+	Onion* _loss = nullptr;
+	Onion* input = nullptr;
+	Onion* output = nullptr;
 
-    Onion* batch_output = nullptr;
-    Onion* batch_input = nullptr;
-    Onion* _loss = nullptr;
+	// 表示该层操作的次数和所用的时间
+	int callTimes = 0;
+	float COST_TIME = 0;
+	 
+	//没有什么意义的构造函数，因为抽象层
+	Layer();
+	//删除所有Onion
+	~Layer();
+	
+	// 默认为CPU
+	dataWhere datawhere = dataWhere::CPU;
+	LayerType layerType = RootLayer;
+	ModelType modelType = Inference;    
 
-    Onion* input = nullptr;
-    Onion* output = nullptr;
+	// 便于继承和调用
+	virtual void trainForword(Onion* batch_input) = 0;
+	virtual void trainBackword(Onion* loss) = 0;  
+	virtual void _forword(Onion* input) = 0; 
+	virtual void initMatrix(Layer* lastLayer) = 0;
+	
+	int batch_size = 0; 
+	double lr = 0.001; 
 
-    int callTimes = 0;
-    float COST_TIME = 0;
-
-    Layer();
-    ~Layer();
-
-    dataWhere datawhere = dataWhere::CPU;
-
-    // virtual void* getWeight() = 0;
-
-    LayerType layerType = RootLayer;
-    ModelType modelType = Inference;
-
-    ActivationFuncType activeFunctype = ActivationFuncType::None;
-
-    // virtual void initTrain(int batch_size) = 0;
-
-    virtual void trainForword(Onion* batch_input) = 0;
-    virtual void trainBackword(Onion* loss) = 0;
-
-    virtual void _forword(Onion* input) = 0;
-
-    virtual void initMatrix(Layer* lastLayer) = 0;
-    int batch_size = 0;
-
-    double lr = 0.001;
-
-    double ActiveFunc(double input);
-    double D_ActiveFunc(double input);
-
-protected:
-    // virtual void initWeight() = 0;
-    // virtual void clearGrad() = 0;    
 };
 
 
