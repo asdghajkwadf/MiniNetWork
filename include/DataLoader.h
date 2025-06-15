@@ -68,7 +68,7 @@ class DataLoader
 public:
 	string root_path = "";
 	DataLoader(const string& root_path, int batch_size); // batch_size用于规定训练时的批次，可以加快训练榨干GPU
-	DataLoader(const DataLoader& obj) = delete;
+	DataLoader(const DataLoader& obj) = delete; // 禁用拷贝
 	~DataLoader();  
 	
 	// 用户可以继承DataLoader自己读取数据，定义了两个虚函数

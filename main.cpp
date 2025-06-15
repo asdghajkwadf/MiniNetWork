@@ -20,7 +20,7 @@ int main(int)
     DataLoader* dataLoader = new DataLoader("D:/DATA/NetWork/data", 16);
 
 
-    dataLoader->readfile(50);
+    dataLoader->readfile(100);
 
     PicImporve::Normalization(dataLoader);
     PicImporve::Padding(dataLoader, 1);

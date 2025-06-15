@@ -161,6 +161,7 @@ void NetWork::printLoss()
 {
     static int times = 0;
     std::cout << times << ": " <<static_cast<SoftMax*>(_layer.back())->loss_sum << endl;
+    ++times;
 }
 
 void NetWork::forword()
