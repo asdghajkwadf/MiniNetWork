@@ -22,7 +22,7 @@ public:
 	Onion* output = nullptr;
 
 	// 表示该层操作的次数和所用的时间
-	int callTimes = 0;
+	size_t callTimes = 0;
 	float COST_TIME = 0;
 	 
 	//没有什么意义的构造函数，因为抽象层
@@ -41,7 +41,7 @@ public:
 	virtual void _forword(Onion* input) = 0; 
 	virtual void initMatrix(Layer* lastLayer) = 0;
 	
-	int batch_size = 0; 
+	size_t batch_size = 0; 
 	double lr = 0.001; 
 protected:
 };
@@ -51,11 +51,11 @@ protected:
 ```C++
 // 存放批次的数据
 struct Batch{
-	int batch_index = 0;
+	size_t batch_index = 0;
 	Onion* data = nullptr;
 	Onion* one_bot = nullptr;
 	Onion* Label = nullptr;
-	int size = 0;
+	size_t size = 0;
 	bool full = true;
 };
 
@@ -64,48 +64,48 @@ class DataLoader
 {
 public:
 	string root_path = "";
-	DataLoader(const string& root_path, int batch_size); // batch_size用于规定训练时的批次，可以加快训练榨干GPU
+	DataLoader(const string& root_path, size_t batch_size); // batch_size用于规定训练时的批次，可以加快训练榨干GPU
 	DataLoader(const DataLoader& obj);
 	~DataLoader();  
 	
 	// 用户可以继承DataLoader自己读取数据，定义了两个虚函数
-	virtual void readfile(unsigned int limit = 0, bool shuffle = true); // 读取每个类别多少个数据(默认全部读取)
+	virtual void readfile(unsigned size_t limit = 0, bool shuffle = true); // 读取每个类别多少个数据(默认全部读取)
 	virtual void splitSample(float rate = 0.75);
 	
 	// 表示第一层输入的数据维度
-	int rows = 28; int cols = 28;  
-	int sample_channel = 1;  
+	size_t rows = 28; size_t cols = 28;  
+	size_t sample_channel = 1;  
 
 	// 获取batch的数据
 	// getBatch会将需要用到的样本一整个批次转化为一个Onion
 	Batch* getBatch();
-	int _Batch_Size();
+	size_t _Batch_Size();
 
 	
 	PicSample* getTestSample();
-	int getTestSampleNum(); 
-	vector<PicSample*>* Sample();
+	size_t getTestSampleNum(); 
+	std::vector<PicSample*>* Sample();
 	
 	// 初始化Batch
 	void initBatch();  
 	void clear();
-	int class_num = 0;  
+	size_t class_num = 0;  
 
 private:
 	Batch* batch = nullptr;  
-	int Batch_size = 0; 
+	size_t Batch_size = 0; 
 
 	// 找出用户给出数据集目录中的文件
 	void find();  
 	
 	// 存放各种样本的数据信息
-	vector<string>* all_class = nullptr;  
-	vector<vector<string>*>* _path = nullptr;  
-	vector<PicSample*>* _sample = nullptr;  
-	vector<PicSample*>* _TrainSample = nullptr;
-	vector<PicSample*>* _TestSample = nullptr;  
-	int sample_num = 0; 
-	int _one_class_num = 0;
+	std::vector<string>* all_class = nullptr;  
+	std::vector<std::vector<string>*>* _path = nullptr;  
+	std::vector<PicSample*>* _sample = nullptr;  
+	std::vector<PicSample*>* _TrainSample = nullptr;
+	std::vector<PicSample*>* _TestSample = nullptr;  
+	size_t sample_num = 0; 
+	size_t _one_class_num = 0;
 };
 ```
 ## 运行中各种数据的处理方式
@@ -116,29 +116,29 @@ class Onion
 {
 	dataWhere where; // 一个枚举变量，指明这个Onion所存储的数据是在CPU还是在GPU上
 	double* _data = nullptr; // 实际的数据指向地址，是一个连续的指针
-	vector<int> _shape; // 数据的层数结构（二维或者三维）
-	int _datasize; // 数据的长度
+	std::vector<size_t> _shape; // 数据的层数结构（二维或者三维）
+	size_t _datasize; // 数据的长度
 public:
 	Onion(); // 没什么比用的构造函数
-	Onion(vector<int>& shape, dataWhere where); // 构造函数要传入shape和datawhere
+	Onion(std::vector<size_t>& shape, dataWhere where); // 构造函数要传入shape和datawhere
 	~Onion(); 
 	bool isGPU = false; 
-	double operator[](int index); // 重载[]操作，方便调试
+	double operator[](size_t index); // 重载[]操作，方便调试
 	void initdata(double min, double max); // 通常用来初始化权重和偏置
 	void setAllData(double data); // 通常用来Zerodata
-	double get(const unsigned int index) const; //
-	double set(const unsigned int index, double data) const; //
+	double get(const unsigned size_t index) const; //
+	double set(const unsigned size_t index, double data) const; //
 	  
 	double* getdataPtr(); // 返回指向真实数据的指针
 	 
-	int Size(); // 返回数据的长度
+	size_t Size(); // 返回数据的长度
 	void CopyData(Onion* onion); // 将另一个Onion的数据复制到本Onion中
 	void toGPU(); //把数据转去GPU
 	void toCPU(); //把数据转去CPU
 private:
 	void createData_CPU();
 	void createData_GPU();
-	void applyGPUMem(int size);
+	void applyGPUMem(size_t size);
 };
 ```
 ## demo分析
@@ -158,15 +158,15 @@ main.cpp 一个简单的手写数字识别分类网络， 可以达到92%的准�
 # 层操作的头文件
 #include "Layer.h"
 #include "Onion.h"
-#include "Conv.h"
-#include "Pool.h"
-#include "View.h"
-#include "Fc.h"
+#include "ConvLayer.h"
+#include "PoolLayer.h"
+#include "VIewLayer.h"
+#include "FullconnectionLayer.h"
 #include "Softmax.h"
 #include "ReLU.h"
 #include "Start.h"  
 
-int main(int)
+size_t main(size_t)
 {
 	// 创建一个DataLoader加载数据集
 	DataLoader* dataLoader = new DataLoader("D:/DATA/NetWork/data", 2);

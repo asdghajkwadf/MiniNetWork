@@ -20,21 +20,7 @@ double rand_num(double min, double max)
     return r;
 }
 
-Timer::Timer(Layer* l)
-{
-    start = std::chrono::high_resolution_clock::now();
-    l->callTimes += 1;
-    this->l = l;
-}
 
-Timer::~Timer()
-{
-    end = std::chrono::high_resolution_clock::now();
-    duration = end - start;
-    float ms = duration.count() * 1000.0f;
-    // std::cout << "Timer took " << ms << "ms" << std::endl;
-    l->COST_TIME += ms;
-}
 
 void matrixMul(Onion& A, Onion& B, Onion& result)
 {
@@ -53,7 +39,7 @@ Onion::Onion() : _data(nullptr)
 
 }
 
-Onion::Onion(vector<int>& shape, dataWhere where) : _shape(shape), where(where), _data(nullptr)
+Onion::Onion(std::vector<size_t>& shape, dataWhere where) : _shape(shape), where(where), _data(nullptr)
 {
 
     if (where == dataWhere::GPU)
@@ -61,7 +47,7 @@ Onion::Onion(vector<int>& shape, dataWhere where) : _shape(shape), where(where),
         isGPU = true;
     }
 
-    int size = 1;
+    size_t size = 1;
     for (auto s : _shape)
     {
         size = size * s;
@@ -108,7 +94,7 @@ void Onion::toGPU()
 
 }
 
-double Onion::operator[](int index)
+double Onion::operator[](size_t index)
 {
     if (_data != nullptr)
     {
@@ -123,7 +109,7 @@ double Onion::operator[](int index)
     }
 }
 
-inline double Onion::get(const unsigned int index) const
+inline double Onion::get(const size_t index) const
 {
     if (_data != nullptr)
     {
@@ -138,7 +124,7 @@ inline double Onion::get(const unsigned int index) const
     }
 }
 
-inline double Onion::set(const unsigned int index, double data) const
+inline double Onion::set(const size_t index, double data) const
 {
     if (_data != nullptr)
     {
@@ -166,14 +152,14 @@ void Onion::initdata(double min, double max)
     }
     else
     {
-        for (int i = 0; i < _datasize; ++i)
+        for (size_t i = 0; i < _datasize; ++i)
         {
             _data[i] = rand_num(min, max);
         }
     }
 }
 
-int Onion::Size()
+size_t Onion::Size()
 {
     return _datasize;
 }
@@ -186,7 +172,7 @@ void Onion::setAllData(double data)
     }
     else
     {
-        for (int i = 0; i < _datasize; ++i)
+        for (size_t i = 0; i < _datasize; ++i)
         {
             _data[i] = 0;
         }
@@ -203,7 +189,7 @@ void Onion::createData_GPU()
     cudaMalloc(&_data, _datasize * sizeof(double));
 }
 
-void Onion::applyGPUMem(int size)
+void Onion::applyGPUMem(size_t size)
 {
     if (_data != nullptr)
     {

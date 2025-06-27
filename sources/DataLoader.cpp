@@ -1,7 +1,6 @@
 #include <iostream>
 #include <filesystem>
 #include <opencv2/opencv.hpp>
-// using namespace cv;
 #include "DataLoader.h"
 #include <vector>
 #include <random>
@@ -11,9 +10,9 @@
 #include "Onion.h"
 
 
-vector<std::string>* listDirectories(string& path) 
+std::vector<std::string>* listDirectories(std::string& path) 
 {
-    vector<string>* directories = new vector<string>();
+    std::vector<std::string>* directories = new std::vector<std::string>();
 
     // 检查路径是否为空
     if (path.empty()) {
@@ -67,7 +66,7 @@ void CopyMem(double* dst, double* src, size_t dst_num, size_t src_num)
 
 
 
-PicSample::PicSample(const string path, const int ID, const int class_num, int r, int c, cv::ImreadModes mod)
+PicSample::PicSample(const std::string path, const size_t ID, const size_t class_num, size_t r, size_t c, cv::ImreadModes mod)
 {
     this->path = path;
     this->ID = ID;
@@ -115,7 +114,7 @@ double* PicSample::getData()
     return _data;
 }
 
-int PicSample::getChannelNum() const
+size_t PicSample::getChannelNum() const
 {
     return channel_num;
 }
@@ -130,10 +129,10 @@ double* PicSample::getDataPtr()
     return _data;
 }
 
-void PicSample::setOneBot(int ID)
+void PicSample::setOneBot(size_t ID)
 {
     one_bot = new double[this->class_num]();
-    for (int o = 0; o < this->class_num; ++o)
+    for (size_t o = 0; o < this->class_num; ++o)
     {
         if (o == ID)
         {
@@ -159,10 +158,10 @@ void PicSample::readIamge(cv::ImreadModes mod)
     this->cols = img.cols;
     _data = new double[img.rows*img.cols];
 
-    for (int row = 0; row < img.rows; ++row) 
+    for (size_t row = 0; row < img.rows; ++row) 
     {
         const uchar* rowPtr = img.ptr<uchar>(row);
-        for (int col = 0; col < img.cols; ++col) 
+        for (size_t col = 0; col < img.cols; ++col) 
         {
             double pixel = static_cast<double>(rowPtr[col]);
             _data[row*img.rows + col] = pixel;
@@ -180,14 +179,11 @@ void PicSample::readIamge(cv::ImreadModes mod)
 
 
 
-DataLoader::DataLoader(const string& root_path, int batch_size)
+DataLoader::DataLoader(const std::string& root_path)
 {
     this->root_path = root_path;
-    this->Batch_size = batch_size;
 
     find();
-
-    this->Batch_size = batch_size;
 }
 
 DataLoader::~DataLoader()
@@ -195,20 +191,7 @@ DataLoader::~DataLoader()
     clear();
 }
 
-void DataLoader::initBatch()
-{
-    batch = new Batch();
 
-    vector<int> batchdataShape = {Batch_size, sample_channel, rows, cols};
-    vector<int> batchOnebotShape = {Batch_size, class_num};
-    vector<int> batchLabelShape = {Batch_size};
-
-    batch->data = new Onion(batchdataShape, dataWhere::CPU);
-    batch->one_bot = new Onion(batchOnebotShape, dataWhere::CPU);
-    batch->Label = new Onion(batchLabelShape, dataWhere::CPU);
-
-    batch->size = Batch_size;
-}
 
 void DataLoader::clear()
 {
@@ -230,54 +213,9 @@ void DataLoader::clear()
     delete _sample;
 }
 
-vector<PicSample*>* DataLoader::Sample()
+std::vector<PicSample*>* DataLoader::Sample()
 {
     return _sample;
-}
-
-Batch* DataLoader::getBatch()
-{
-
-    // 这司马getBatch写得就是一坨屎
-
-    static auto it = 0;
-    
-    double* batchDataPtr = batch->data->getdataPtr();
-    double* batchOneBotPtr = batch->one_bot->getdataPtr();
-    double* batchLabelPtr = batch->Label->getdataPtr();
-
-    for (int b = 0; b < Batch_size; ++b)
-    {
-        batch->batch_index = it / Batch_size;
-        if (it < _TrainSample->size())
-        {
-            batch->full = true;
-
-            double* dataPtr = _TrainSample->at(it)->getData();   
-            int index = it*batch->data->Size();
-            memcpy(batchDataPtr + b*sample_channel*rows*cols, dataPtr, sample_channel*rows*cols*sizeof(double)); 
-
-            double* OnebotPtr = _TrainSample->at(it)->getOneBot();
-
-            memcpy(batchOneBotPtr + b*class_num, OnebotPtr, class_num*sizeof(double));   
-
-            double labelPtr = _TrainSample->at(it)->getID();
-            batchLabelPtr[b] = labelPtr;
-            ++it;
-        }
-        else
-        {
-            batch->full = false;
-            it = 0;
-            break;
-        }
-    }
-    return batch;
-}
-
-int DataLoader::_Batch_Size()
-{
-    return Batch_size;
 }
 
 PicSample* DataLoader::getTestSample()
@@ -293,7 +231,7 @@ PicSample* DataLoader::getTestSample()
     }
 }
 
-int DataLoader::getTestSampleNum()
+size_t DataLoader::getTestSampleNum()
 {
     return _TestSample->size();
 }
@@ -304,48 +242,48 @@ void DataLoader::find()
     
     all_class = listDirectories(root_path);
 
-    _path = new vector<vector<string>*>(static_cast<int>(all_class->size()));
-    this->class_num = static_cast<int>(_path->size());
+    _path = new std::vector<std::vector<std::string>*>(static_cast<size_t>(all_class->size()));
+    this->class_num = static_cast<size_t>(_path->size());
     // 找出目录下所有文件
     for (auto i = 0; i < all_class->size(); ++i)
     {
-        string Path = this->root_path + "/" + all_class->at(i);
-        vector<string>* one_path = listDirectories(Path);
+        std::string Path = this->root_path + "/" + all_class->at(i);
+        std::vector<std::string>* one_path = listDirectories(Path);
         (*_path)[i] = one_path;
-        this->sample_num = this->sample_num + static_cast<int>(one_path->size());
+        this->sample_num = this->sample_num + static_cast<size_t>(one_path->size());
     }
 }
 
-void DataLoader::readfile(unsigned int limit, bool shuffle)
+void DataLoader::readfile(size_t limit, bool shuffle)
 {
     this->sample_num = limit * this->class_num;
     if (limit == 0)
     {
-        _sample = new vector<PicSample*>(this->sample_num);
-        int count = 0;
-        for (int c = 0; c < _path->size(); ++c)
+        _sample = new std::vector<PicSample*>(this->sample_num);
+        size_t count = 0;
+        for (size_t c = 0; c < _path->size(); ++c)
         {
-            for (vector<string>::iterator it = ((*_path)[c])->begin(); it != ((*_path)[c])->end(); ++it)
+            for (std::vector<std::string>::iterator it = ((*_path)[c])->begin(); it != ((*_path)[c])->end(); ++it)
             {
-                string path = this->root_path + "/" + all_class->at(c) + "/" + *it;
-                (*_sample)[count] = new PicSample(path, c, static_cast<int>(_path->size()), rows, cols, cv::IMREAD_GRAYSCALE);
+                std::string path = this->root_path + "/" + all_class->at(c) + "/" + *it;
+                (*_sample)[count] = new PicSample(path, c, static_cast<size_t>(_path->size()), rows, cols, cv::IMREAD_GRAYSCALE);
             }
         }
     }
     else
     {
-        _sample = new vector<PicSample*>(this->sample_num);
-        int count = 0;
+        _sample = new std::vector<PicSample*>(this->sample_num);
+        size_t count = 0;
         for (auto c = 0; c < _path->size(); ++c)
         {
             if (limit > _path->at(c)->size())
             {
                 throw "读取数量超过样本数量";
             }
-            for (unsigned int i = 0; i < limit; ++i)
+            for (size_t i = 0; i < limit; ++i)
             {
-                string path = this->root_path + "/" + all_class->at(c) + "/" + (*((*_path)[c]))[i];
-                (*_sample)[count] = new PicSample(path, c, static_cast<int>(_path->size()), rows, cols, cv::IMREAD_GRAYSCALE);
+                std::string path = this->root_path + "/" + all_class->at(c) + "/" + (*((*_path)[c]))[i];
+                (*_sample)[count] = new PicSample(path, c, static_cast<size_t>(_path->size()), rows, cols, cv::IMREAD_GRAYSCALE);
                 count = count + 1;
             }
         }
@@ -356,7 +294,7 @@ void DataLoader::readfile(unsigned int limit, bool shuffle)
         std::random_device rd;
         std::mt19937 gen(rd()); // 使用 Mersenne Twister 引擎
         
-        // 打乱 vector
+        // 打乱 std::vector
         std::shuffle(_sample->begin(), _sample->end(), gen);
     }
 
@@ -365,13 +303,13 @@ void DataLoader::readfile(unsigned int limit, bool shuffle)
 
 void DataLoader::splitSample(float rate)
 {
-    int TrainNum = _sample->size() * rate;
-    // int TestNum = _sample->size() * (1 - rate);
+    size_t TrainNum = _sample->size() * rate;
+    // size_t TestNum = _sample->size() * (1 - rate);
 
     if (_TrainSample == nullptr && _TestSample == nullptr)
     {
-        _TrainSample = new vector<PicSample*>(); 
-        _TestSample = new vector<PicSample*>(); 
+        _TrainSample = new std::vector<PicSample*>(); 
+        _TestSample = new std::vector<PicSample*>(); 
     }
     else 
     {
@@ -379,11 +317,11 @@ void DataLoader::splitSample(float rate)
         _TestSample->clear();
     }
 
-    for (int s = 0; s < _sample->size(); ++s)
+    for (size_t s = 0; s < _sample->size(); ++s)
     {
         if (s < TrainNum)
         {
-            // std::cout << _sample->at(s) << endl;
+            // std::std::cout << _sample->at(s) << endl;
             _TrainSample->push_back(_sample->at(s));
         }
         else
