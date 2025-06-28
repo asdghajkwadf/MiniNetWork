@@ -82,11 +82,11 @@ void MaxPoolLayer::trainForword(Onion& batch_input)
     Layer::batch_input.CopyData(batch_input);
     if (Layer::datawhere == dataWhere::CPU)
     {
-        _CPUpooling(batch_input);
+        _CPUpooling();
     }
     else if (Layer::datawhere == dataWhere::GPU)
     {
-        _GPUpooling(batch_input);
+        _GPUpooling();
     }
 }
 
@@ -148,14 +148,10 @@ void MaxPoolLayer::clac_loss(Onion& batch_output)
 }
 void MaxPoolLayer::_CPUclac_gradient(Onion& nextLayerBatchLoss)
 {
-    double* lossPtr = Layer::_loss.getdataPtr();
-    double* nextLossPtr = nextLayerBatchLoss.getdataPtr();
-    double* maxIndexPtr = this->max_index.getdataPtr();
-
     for (size_t i = 0; i < max_index.Size(); ++i)
     {
-        size_t lossindex = (size_t)maxIndexPtr[i];
-        lossPtr[lossindex] = nextLossPtr[i];
+        size_t lossindex = max_index[i];
+        Layer::_loss[lossindex] = nextLayerBatchLoss[i];
     }
 }
 
@@ -174,12 +170,8 @@ void MaxPoolLayer::_GPUupdate()
 
 }
 
-void MaxPoolLayer::_CPUpooling(Onion& batch_input)
+void MaxPoolLayer::_CPUpooling()
 {
-    double* batchinputPtr = batch_input.getdataPtr();
-    double* batchoutputPtr = Layer::batch_output.getdataPtr();
-    double* maxIndexPtr = this->max_index.getdataPtr();
-
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
         for (size_t cha = 0; cha < channel; ++cha)
@@ -189,30 +181,30 @@ void MaxPoolLayer::_CPUpooling(Onion& batch_input)
                 for (size_t c = 0; c < this->_c_times; ++c)
                 {
                     size_t _bigindex = b*channel*in_rows*in_cols + cha*in_rows*in_cols + (r*pooling_rows) * in_cols + (c*pooling_cols);
-                    double max = batchinputPtr[_bigindex];
+                    double max = Layer::batch_input[_bigindex];
 
                     size_t maxIndex = b*channel*_r_times*_c_times + cha*_r_times*_c_times + r*_c_times + c;
-                    maxIndexPtr[maxIndex] = b*channel*in_rows*in_cols + cha*in_rows*in_cols + (r*pooling_rows)*in_cols + c*pooling_cols;
+                    max_index[maxIndex] = b*channel*in_rows*in_cols + cha*in_rows*in_cols + (r*pooling_rows)*in_cols + c*pooling_cols;
                     for (size_t p_r = 0; p_r < pooling_rows; ++p_r)
                     {
                         for (size_t p_c = 0; p_c < pooling_cols; ++p_c)
                         {
                             size_t inindex = b*channel*in_rows*in_cols + cha*in_rows*in_cols + (r*pooling_rows + p_r) * in_cols + (c*pooling_cols + p_c);
-                            if (batchinputPtr[inindex] > max)
+                            if (Layer::batch_input[inindex] > max)
                             {
-                                max = batchinputPtr[inindex];
-                                maxIndexPtr[maxIndex] = (double)(inindex);
+                                max = Layer::batch_input[inindex];
+                                max_index[maxIndex] = (double)(inindex);
                             }
                         }
                     }
-                    batchoutputPtr[b*channel*out_rows*out_cols + cha*out_rows*out_cols + r*out_cols + c] = max;
+                    Layer::batch_output[b*channel*out_rows*out_cols + cha*out_rows*out_cols + r*out_cols + c] = max;
                 }
             }
         }
     }    
 }
 
-void MaxPoolLayer::_GPUpooling(Onion& batch_input)
+void MaxPoolLayer::_GPUpooling()
 {
 
 }

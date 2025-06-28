@@ -44,7 +44,7 @@ private:
 
 
     void CPUZeroGrad();
-    void CPUforword(Onion& batch_input);
+    void CPUforword();
     void CPUclac_loss(Onion& Label);
 
     size_t oneBot_num = 0;

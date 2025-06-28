@@ -33,8 +33,8 @@ private:
 
     void initWeight();
 
-    void _CPUpooling(Onion& batch_input);
-    void _GPUpooling(Onion& batch_input);
+    void _CPUpooling();
+    void _GPUpooling();
 
     // CPU
     void _CPUZeroGrad();

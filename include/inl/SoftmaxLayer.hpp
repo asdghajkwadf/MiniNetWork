@@ -32,10 +32,12 @@ void SoftmaxLayer::initMatrix(Layer* lastLayer)
     if (Layer::modelType == ModelType::Train)
     {
         OnionShape batchoutput_shape = {Layer::batch_size, oneBot_num};
-        batch_output.initOnion(batchoutput_shape, Layer::datawhere);
-        
+        OnionShape batchinput_shape = {Layer::batch_size, oneBot_num};
         OnionShape loss_shape = {Layer::batch_size, oneBot_num};
-        _loss.initOnion(loss_shape, Layer::datawhere);
+        
+        Layer::batch_input.initOnion(batchinput_shape, Layer::datawhere);
+        Layer::batch_output.initOnion(batchoutput_shape, Layer::datawhere);
+        Layer::_loss.initOnion(loss_shape, Layer::datawhere);
     }
     else if (Layer::modelType == ModelType::Inference)
     {
@@ -86,9 +88,10 @@ result SoftmaxLayer::getResult()
 
 void SoftmaxLayer::trainForword(Onion& batch_input)
 {
+    Layer::batch_input.CopyData(batch_input);
     if (Layer::datawhere == dataWhere::CPU)
     {
-        CPUforword(batch_input);
+        CPUforword();
     }
     else if (Layer::datawhere == dataWhere::GPU)
     {
@@ -134,21 +137,19 @@ void SoftmaxLayer::CPUclac_loss(Onion& Label)
     // std::std::cout << std::endl << std::endl;;
 }
 
-void SoftmaxLayer::CPUforword(Onion& batch_input)
+void SoftmaxLayer::CPUforword()
 {
-    double* batchinputPtr = batch_input.getdataPtr();
-    double* batchoutputPtr = Layer::batch_output.getdataPtr();
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
         double total = 0;
         for(size_t i = 0; i < oneBot_num; ++i)
         {
-            total += exp(batchinputPtr[b*oneBot_num + i]);
+            total += exp(Layer::batch_input[b*oneBot_num + i]);
         }
 
         for(size_t i = 0; i < oneBot_num; ++i)
         {
-            batchoutputPtr[b*oneBot_num + i] = exp(batchinputPtr[b*oneBot_num + i]) / total;
+            Layer::batch_output[b*oneBot_num + i] = exp(Layer::batch_input[b*oneBot_num + i]) / total;
             // std::cout << batchoutputPtr[b*oneBot_num + i] << " ";
         }
         // std::cout << std::endl;

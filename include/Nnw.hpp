@@ -190,7 +190,7 @@ void NetWork::Train_forword(Batch* batch)
 
 void NetWork::Train_backword(Batch* batch)
 {
-    for (size_t l = 0; l < _reverseLayer.size(); ++l)
+    for (size_t l = 0; l < _layer.size(); ++l)
     {
         if (l == 0)
         {

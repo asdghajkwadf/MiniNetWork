@@ -23,7 +23,7 @@ void PicImporve::Normalization(DataLoader* dataLoader)
         //     {
         //         std::cout << _data[r*s_ptr->cols + c] << " ";
         //     }
-        //     std::cout << endl;
+        //     std::cout << std::endl;
         // }
     }
 }
@@ -32,7 +32,6 @@ void PicImporve::Padding(DataLoader* dataLoader, size_t circles)
 {
     dataLoader->rows = dataLoader->rows + 2 * circles;
     dataLoader->cols = dataLoader->cols + 2 * circles;
-
 
     for (auto s_ptr : *(dataLoader->Sample()))
     {   
@@ -64,7 +63,7 @@ void PicImporve::Padding(DataLoader* dataLoader, size_t circles)
         //     {
         //         std::cout << newData[r*s_ptr->cols + c] << " ";
         //     }
-        //     std::cout << endl;
+        //     std::cout << std::endl;
         // }
     }   
 }

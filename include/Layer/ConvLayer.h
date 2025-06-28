@@ -44,8 +44,8 @@ private:
     void initWeight();
     void initGradient();
     
-    void _CPUforword(Onion& batch_input);
-    void _GPUforword(Onion& batch_input);
+    void _CPUforword();
+    void _GPUforword();
 
 
     void _CPUZeroGrad();

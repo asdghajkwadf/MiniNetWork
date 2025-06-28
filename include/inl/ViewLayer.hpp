@@ -56,12 +56,10 @@ void ViewLayer::initMatrix(Layer* lastLayer)
 
 void ViewLayer::trainForword(Onion& batch_input)
 {
-    double* batchinputPtr = batch_input.getdataPtr();
-    double* batchoutputPtr = batch_output.getdataPtr();
-
     if (Layer::datawhere == dataWhere::CPU)
     {
-        memcpy(batchoutputPtr, batchinputPtr, sizeof(double) * batch_input.Size());
+        // memcpy(batchoutputPtr, batchinputPtr, sizeof(double) * batch_input.Size());
+        Layer::batch_output.CopyData(batch_input);
     }
     else if (Layer::datawhere = dataWhere::GPU)
     {
@@ -85,13 +83,10 @@ void ViewLayer::_forword(Onion& input)
 
 void ViewLayer::trainBackword(Onion& loss)
 {
-    double* lossPtr = Layer::_loss.getdataPtr();
-    double* inlossPtr = loss.getdataPtr();
-
     Timer t(this);
     if (Layer::datawhere == dataWhere::CPU)
     {
-        memcpy(lossPtr, inlossPtr, sizeof(double) * loss.Size());
+        Layer::_loss.CopyData(loss);
     }
     else if (Layer::datawhere = dataWhere::GPU)
     {

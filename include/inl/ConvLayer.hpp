@@ -140,7 +140,7 @@ void ConvLayer::_forword(Onion& input)
                         {
                             size_t inindex = in_c*in_rows*in_cols + (r*step + k_r)*in_cols + (c*step + k_c);
                             // std::std::cout << inindex << std::endl;
-                            sum += inputPtr[inindex] * _wPtr[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
+                            sum += input[inindex] * _w[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
                             // if (inindex >= 900)
                             // {
                             //     std::std::cout << inindex << std::endl;
@@ -149,7 +149,7 @@ void ConvLayer::_forword(Onion& input)
                     }
                     size_t outindex = in_c*kernel_num*out_rows*out_cols + kernel_i*out_rows*out_cols + r*out_cols + c;
 
-                    outputPtr[outindex] = sum + _bPtr[kernel_i];
+                    Layer::output[outindex] = sum + _b[kernel_i];
                 }
             }  
         }
@@ -161,11 +161,11 @@ void ConvLayer::trainForword(Onion& batch_input)
     Layer::batch_input.CopyData(batch_input);
     if (datawhere == dataWhere::CPU)
     {
-        _CPUforword(batch_input);
+        _CPUforword();
     }
     else if (datawhere == dataWhere::GPU)
     {
-        _GPUforword(batch_input);
+        _GPUforword();
     }
 }
 
@@ -194,14 +194,6 @@ void ConvLayer::_CPUZeroGrad()
 
 void ConvLayer::_CPUclac_gradient(Onion& loss)
 {
-    double* batchinputPtr = Layer::batch_input.getdataPtr();
-    double* lossPtr = loss.getdataPtr();
-    double* layerLossPtr = Layer::_loss.getdataPtr();
-    double* bGradPtr = _b_grad.getdataPtr();
-    double* wGradPtr = _w_grad.getdataPtr();
-
-    double* wPtr = _w.getdataPtr();
-
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
         for (size_t in_c = 0; in_c < this->in_channel; ++in_c)
@@ -218,12 +210,12 @@ void ConvLayer::_CPUclac_gradient(Onion& loss)
                             for (size_t k_c = 0; k_c < this->kernel_c; ++k_c)
                             {
                                 size_t inindex = b*in_channel*in_rows*in_cols + in_c*in_rows*in_cols + (r*step + k_r)*in_cols + (c*step + k_c);
-                                wGradPtr[k_r*kernel_c + k_c] += batchinputPtr[inindex] * lossPtr[lossindex] / Layer::batch_size;
-                                layerLossPtr[inindex] = lossPtr[lossindex] * wPtr[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
+                                _w_grad[k_r*kernel_c + k_c] += Layer::batch_input[inindex] * loss[lossindex] / Layer::batch_size;
+                                Layer::_loss[inindex] = loss[lossindex] * _w[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
                             }
                         }
                         // std::std::cout << lossindex << std::endl;
-                        bGradPtr[kernel_i] += lossPtr[lossindex] / Layer::batch_size;
+                        _b_grad[kernel_i] += loss[lossindex] / Layer::batch_size;
                     }
                 }  
             }
@@ -245,20 +237,14 @@ void ConvLayer::_CPUclac_gradient(Onion& loss)
 
 void ConvLayer::_CPUupdate()
 {
-    double* bGradPtr = _b_grad.getdataPtr();
-    double* wGradPtr = _w_grad.getdataPtr();
-
-    double* bPtr = _b.getdataPtr();
-    double* wPtr = _w.getdataPtr();
-
     for (size_t k = 0; k < kernel_num; ++k)
     {
-        bPtr[k] -= bGradPtr[k] * Layer::lr;
+        _b[k] -= _b[k] * Layer::lr;
         for (size_t k_r = 0; k_r < kernel_r; ++k_r)
         {
             for (size_t k_c = 0; k_c < kernel_c; ++k_c)
             {
-                wPtr[k*kernel_r*kernel_c + k_r*kernel_c + k_c] -= wGradPtr[k*kernel_r*kernel_c + k_r*kernel_c + k_c] * Layer::lr;
+                _w[k*kernel_r*kernel_c + k_r*kernel_c + k_c] -= _w_grad[k*kernel_r*kernel_c + k_r*kernel_c + k_c] * Layer::lr;
             }
         }
     }
@@ -279,14 +265,8 @@ void ConvLayer::_GPUclac_gradient(Onion& loss)
 
 }
 
-void ConvLayer::_CPUforword(Onion& batch_input)
+void ConvLayer::_CPUforword()
 {
-    double* _wPtr = _w.getdataPtr();
-    double* _bPtr = _b.getdataPtr();
-
-    double* batchinputPtr = batch_input.getdataPtr();
-    double* batchoutputPtr = Layer::batch_output.getdataPtr();
-
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
         for (size_t in_c = 0; in_c < this->in_channel; ++in_c)
@@ -304,11 +284,11 @@ void ConvLayer::_CPUforword(Onion& batch_input)
                             {
                                 size_t inindex = b*in_channel*in_rows*in_cols + in_c*in_rows*in_cols + (r*step + k_r)*in_cols + (c*step + k_c);
                                 // std::std::cout << inindex << std::endl;
-                                sum += batchinputPtr[inindex] * _wPtr[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
+                                sum += Layer::batch_input[inindex] * _w[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
                             }
                         }
                         size_t outindex = b*in_channel*kernel_num*out_rows*out_cols + in_c*kernel_num*out_rows*out_cols + kernel_i*out_rows*out_cols + r*out_cols + c;
-                        batchoutputPtr[outindex] = sum + _bPtr[kernel_i];
+                        Layer::batch_output[outindex] = sum + _b[kernel_i];
                     }
                 }  
             }
@@ -316,7 +296,7 @@ void ConvLayer::_CPUforword(Onion& batch_input)
     }
 }
 
-void ConvLayer::_GPUforword(Onion& batch_input)
+void ConvLayer::_GPUforword()
 {
 
 }
@@ -325,11 +305,11 @@ void ConvLayer::initWeight()
 {   
     OnionShape wShape = {kernel_num, kernel_r, kernel_c};
     _w.initOnion(wShape, Layer::datawhere);
-    _w.initdata(-0.1, 0.1);
+    _w.initdata(-0.5, 0.5);
 
     OnionShape bShape = {kernel_num};
     _b.initOnion(bShape, Layer::datawhere);
-    _b.setAllData(1);
+    _b.setAllData(0);
 }
 
 void ConvLayer::initGradient()

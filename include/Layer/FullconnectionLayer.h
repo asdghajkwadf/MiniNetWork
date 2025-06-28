@@ -31,13 +31,13 @@ private:
     // CPU
     void _CPUZeroGrad();
     void _CPUupdate();
-    void _CPUforword(Onion& batch_input);
+    void _CPUforword();
     void clac_loss(Onion& batch_output);
     void _CPUclac_gradient(Onion& nextLayerBatchLoss);
 
 
     // GPU
-    void _GPUforword(Onion& batch_input);
+    void _GPUforword();
     void _GPUZeroGrad();
     void _GPUclac_gradient(Onion& nextLayerBatchLoss);
     void _GPUupdate();

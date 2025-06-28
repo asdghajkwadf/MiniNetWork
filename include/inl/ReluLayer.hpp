@@ -107,22 +107,17 @@ void ReluLayer::trainBackword(Onion& loss)
 
 void ReluLayer::CPUclac_gradient(Onion& loss)
 {
-    double* nextLossPtr = loss.getdataPtr();
-    double* batchinputPtr = Layer::batch_input.getdataPtr();
-    double* lossPtr = Layer::_loss.getdataPtr();
     for (size_t i = 0; i < Layer::batch_input.Size(); ++i)
     {
-        lossPtr[i] = (batchinputPtr[i] > 0) ? nextLossPtr[i] : 0;
+        Layer::_loss[i] = (Layer::batch_input[i] > 0) ? loss[i] : 0;
     }
 }
 
 void ReluLayer::CPUforword()
 {
-    double* batchinputPtr = batch_input.getdataPtr();
-    double* batchoutputPtr = Layer::batch_output.getdataPtr();
     for (size_t i = 0; i < batch_input.Size(); ++i)
     {
-        batchoutputPtr[i] = (batchinputPtr[i] > 0) ? batchinputPtr[i] : 0;
+        Layer::batch_output[i] = (Layer::batch_input[i] > 0) ? Layer::batch_input[i] : 0;
     }
 }
 
