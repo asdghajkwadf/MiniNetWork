@@ -120,11 +120,6 @@ void ConvLayer::setKernelSize(size_t r, size_t c)
 
 void ConvLayer::_forword(Onion& input)
 {
-    double* _wPtr = _w.getdataPtr();
-    double* _bPtr = _b.getdataPtr();
-
-    double* inputPtr = input.getdataPtr();
-    double* outputPtr = Layer::output.getdataPtr();
     for (size_t in_c = 0; in_c < this->in_channel; ++in_c)
     {
         for (size_t kernel_i = 0; kernel_i < this->kernel_num; ++kernel_i)
@@ -139,12 +134,7 @@ void ConvLayer::_forword(Onion& input)
                         for (size_t k_c = 0; k_c < this->kernel_c; ++k_c)
                         {
                             size_t inindex = in_c*in_rows*in_cols + (r*step + k_r)*in_cols + (c*step + k_c);
-                            // std::std::cout << inindex << std::endl;
                             sum += input[inindex] * _w[kernel_i*kernel_r*kernel_c + k_r*kernel_c + k_c];
-                            // if (inindex >= 900)
-                            // {
-                            //     std::std::cout << inindex << std::endl;
-                            // }
                         }
                     }
                     size_t outindex = in_c*kernel_num*out_rows*out_cols + kernel_i*out_rows*out_cols + r*out_cols + c;

@@ -92,9 +92,6 @@ void MaxPoolLayer::trainForword(Onion& batch_input)
 
 void MaxPoolLayer::_forword(Onion& input)
 {
-    double* inputPtr = input.getdataPtr();
-    double* outputPtr = Layer::output.getdataPtr();
-
     for (size_t cha = 0; cha < channel; ++cha)
     {
         for (size_t r = 0; r < this->_r_times; ++r)
@@ -102,21 +99,19 @@ void MaxPoolLayer::_forword(Onion& input)
             for (size_t c = 0; c < this->_c_times; ++c)
             {
                 size_t _bigindex = cha*in_rows*in_cols + (r*pooling_rows) * in_cols + (c*pooling_cols);
-                double max = inputPtr[_bigindex];
-
-                size_t maxIndex = cha*_r_times*_c_times + r*_c_times + c;
+                double max = input[_bigindex];
                 for (size_t p_r = 0; p_r < pooling_rows; ++p_r)
                 {
                     for (size_t p_c = 0; p_c < pooling_cols; ++p_c)
                     {
                         size_t inindex = cha*in_rows*in_cols + (r*pooling_rows + p_r) * in_cols + (c*pooling_cols + p_c);
-                        if (inputPtr[inindex] > max)
+                        if (input[inindex] > max)
                         {
-                            max = inputPtr[inindex];
+                            max = input[inindex];
                         }
                     }
                 }
-                outputPtr[cha*out_rows*out_cols + r*out_cols + c] = max;
+                Layer::output[cha*out_rows*out_cols + r*out_cols + c] = max;
             }
         }
     }

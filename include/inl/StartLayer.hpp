@@ -34,6 +34,12 @@ void StartLayer::initMatrix(Layer* lastLayer)
     Layer::batch_input.initOnion(batchinputShape, Layer::datawhere);
     Layer::batch_output.initOnion(batchoutputShape, Layer::datawhere);
     Layer::_loss.initOnion(lossShape, Layer::datawhere);
+
+    
+    OnionShape outputShape = {channel, out_rows, out_cols};
+    Layer::output.initOnion(outputShape, Layer::datawhere);
+
+
 }
 
 
@@ -49,7 +55,7 @@ void StartLayer::trainBackword(Onion& loss)
 
 void StartLayer::_forword(Onion& input)
 {
-    
+    Layer::output.CopyData(input);
 }
 
 

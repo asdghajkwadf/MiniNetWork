@@ -73,11 +73,9 @@ void ReluLayer::initMatrix(Layer* lastLayer)
 
 void ReluLayer::_forword(Onion& input)
 {
-    double* inputPtr = input.getdataPtr();
-    double* outputPtr = Layer::output.getdataPtr();
     for (size_t i = 0; i < input.Size(); ++i)
     {
-        outputPtr[i] = (inputPtr[i] > 0) ? inputPtr[i] : 0;
+        Layer::output[i] = (input[i] > 0) ? input[i] : 0;
     }
 }
 

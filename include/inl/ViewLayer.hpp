@@ -69,11 +69,9 @@ void ViewLayer::trainForword(Onion& batch_input)
 
 void ViewLayer::_forword(Onion& input)
 {
-    double* inputPtr = input.getdataPtr();
-    double* outputPtr = Layer::output.getdataPtr();
     if (Layer::datawhere == dataWhere::CPU)
     {
-        memcpy(outputPtr, inputPtr, sizeof(double) * input.Size());
+        Layer::output.CopyData(input);
     }
     else if (Layer::datawhere = dataWhere::GPU)
     {

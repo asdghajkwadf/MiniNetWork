@@ -38,20 +38,14 @@ FullconnectionLayer::~FullconnectionLayer()
 
 void FullconnectionLayer::_forword(Onion& input)
 {
-    double* inputPtr = input.getdataPtr();
-    double* outputPtr = Layer::output.getdataPtr();
-
-    double* wPtr = _w.getdataPtr();
-    double* bPtr = _b.getdataPtr();
-
     for (size_t out = 0; out < output_num; out++)
     {
         double _sum = 0;
         for (size_t in = 0; in < input_num; in++)
         {
-            _sum += wPtr[out*input_num + in] * inputPtr[in];
+            _sum += _w[out*input_num + in] * input[in];
         }
-        outputPtr[out] = _sum + bPtr[out];
+        Layer::output[out] = _sum + _b[out];
     }
 }
 

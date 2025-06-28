@@ -51,28 +51,26 @@ void SoftmaxLayer::initMatrix(Layer* lastLayer)
 
 void SoftmaxLayer::_forword(Onion& input)
 {
-    double* inputPtr = input.getdataPtr();
-    double* outputPtr = Layer::output.getdataPtr();
     double total = 0;
     for(size_t i = 0; i < oneBot_num; ++i)
     {
-        total += exp(inputPtr[i]);
+        total += exp(input[i]);
     }
 
     for(size_t i = 0; i < oneBot_num; ++i)
     {
-        outputPtr[i] = exp(inputPtr[i]) / total;
+        Layer::output[i] = exp(input[i]) / total;
     }
 
     double max = 0;
 
     ID = 0;
-    confiden = outputPtr[0];
+    confiden = Layer::output[0];
     for (size_t i = 0; i < oneBot_num; ++i)
     {
-        if (outputPtr[i] > confiden)
+        if (Layer::output[i] > confiden)
         {
-            confiden = outputPtr[i];
+            confiden = Layer::output[i];
             ID = i;
         }
     }
