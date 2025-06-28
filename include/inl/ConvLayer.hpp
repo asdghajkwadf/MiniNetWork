@@ -21,15 +21,15 @@ ConvLayer::ConvLayer(size_t step, size_t in_channel, size_t out_channel, size_t 
 
 ConvLayer::~ConvLayer()
 {   
-    if (_w != nullptr)
-    {
-        delete _w;
-    }
+    // if (_w != nullptr)
+    // {
+    //     delete _w;
+    // }
 
-    if (_b != nullptr)
-    {
-        delete _b;
-    }
+    // if (_b != nullptr)
+    // {
+    //     delete _b;
+    // }
 }
 
 size_t ConvLayer::getoutRows() const
@@ -52,7 +52,7 @@ void ConvLayer::initMatrix(Layer* lastLayer)
         in_cols = al->out_cols;
     }
 
-    else if (lastLayer->layerType == LayerType::PoolingLayerENUM)
+    else if (lastLayer->layerType == LayerType::MaxPoolingLayerENUM)
     {
         MaxPoolLayer* p = static_cast<MaxPoolLayer*>(lastLayer);
         this->in_rows = p->out_rows;
@@ -90,9 +90,9 @@ void ConvLayer::initMatrix(Layer* lastLayer)
         OnionShape lossShape = {Layer::batch_size, in_channel, in_rows, in_cols};
         OnionShape batchinputShape = {Layer::batch_size, in_channel, in_rows, in_cols};
 
-        Layer::batch_input = new Onion(batchinputShape, Layer::datawhere);
-        Layer::batch_output = new Onion(batchoutputShape, Layer::datawhere);
-        Layer::_loss = new Onion(lossShape, Layer::datawhere);
+        Layer::batch_input.initOnion(batchinputShape, Layer::datawhere);
+        Layer::batch_output.initOnion(batchoutputShape, Layer::datawhere);
+        Layer::_loss.initOnion(lossShape, Layer::datawhere);
 
         initWeight();
         initGradient();
@@ -102,8 +102,8 @@ void ConvLayer::initMatrix(Layer* lastLayer)
         OnionShape inputShape = {in_channel, in_rows, in_cols};
         OnionShape outputShape = {out_channel, out_rows, out_cols};
 
-        Layer::input = new Onion(inputShape, Layer::datawhere);
-        Layer::output = new Onion(outputShape, Layer::datawhere);
+        Layer::input.initOnion(inputShape, Layer::datawhere);
+        Layer::output.initOnion(outputShape, Layer::datawhere);
     }
 }
 
@@ -118,13 +118,13 @@ void ConvLayer::setKernelSize(size_t r, size_t c)
     this->kernel_c = c;
 }
 
-void ConvLayer::_forword(Onion* input)
+void ConvLayer::_forword(Onion& input)
 {
-    double* _wPtr = _w->getdataPtr();
-    double* _bPtr = _b->getdataPtr();
+    double* _wPtr = _w.getdataPtr();
+    double* _bPtr = _b.getdataPtr();
 
-    double* inputPtr = input->getdataPtr();
-    double* outputPtr = Layer::output->getdataPtr();
+    double* inputPtr = input.getdataPtr();
+    double* outputPtr = Layer::output.getdataPtr();
     for (size_t in_c = 0; in_c < this->in_channel; ++in_c)
     {
         for (size_t kernel_i = 0; kernel_i < this->kernel_num; ++kernel_i)
@@ -156,9 +156,9 @@ void ConvLayer::_forword(Onion* input)
     }
 }
 
-void ConvLayer::trainForword(Onion* batch_input)
+void ConvLayer::trainForword(Onion& batch_input)
 {
-    Layer::batch_input->CopyData(batch_input);
+    Layer::batch_input.CopyData(batch_input);
     if (datawhere == dataWhere::CPU)
     {
         _CPUforword(batch_input);
@@ -169,7 +169,7 @@ void ConvLayer::trainForword(Onion* batch_input)
     }
 }
 
-void ConvLayer::trainBackword(Onion* loss)
+void ConvLayer::trainBackword(Onion& loss)
 {   
     Timer t(this);
     if (Layer::datawhere == dataWhere::CPU)
@@ -187,20 +187,20 @@ void ConvLayer::trainBackword(Onion* loss)
 
 void ConvLayer::_CPUZeroGrad()
 {
-    Layer::_loss->setAllData(0);
-    _w_grad->setAllData(0);
-    _b_grad->setAllData(0);
+    Layer::_loss.setAllData(0);
+    _w_grad.setAllData(0);
+    _b_grad.setAllData(0);
 }
 
-void ConvLayer::_CPUclac_gradient(Onion* loss)
+void ConvLayer::_CPUclac_gradient(Onion& loss)
 {
-    double* batchinputPtr = Layer::batch_input->getdataPtr();
-    double* lossPtr = loss->getdataPtr();
-    double* layerLossPtr = Layer::_loss->getdataPtr();
-    double* bGradPtr = _b_grad->getdataPtr();
-    double* wGradPtr = _w_grad->getdataPtr();
+    double* batchinputPtr = Layer::batch_input.getdataPtr();
+    double* lossPtr = loss.getdataPtr();
+    double* layerLossPtr = Layer::_loss.getdataPtr();
+    double* bGradPtr = _b_grad.getdataPtr();
+    double* wGradPtr = _w_grad.getdataPtr();
 
-    double* wPtr = _w->getdataPtr();
+    double* wPtr = _w.getdataPtr();
 
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
@@ -245,11 +245,11 @@ void ConvLayer::_CPUclac_gradient(Onion* loss)
 
 void ConvLayer::_CPUupdate()
 {
-    double* bGradPtr = _b_grad->getdataPtr();
-    double* wGradPtr = _w_grad->getdataPtr();
+    double* bGradPtr = _b_grad.getdataPtr();
+    double* wGradPtr = _w_grad.getdataPtr();
 
-    double* bPtr = _b->getdataPtr();
-    double* wPtr = _w->getdataPtr();
+    double* bPtr = _b.getdataPtr();
+    double* wPtr = _w.getdataPtr();
 
     for (size_t k = 0; k < kernel_num; ++k)
     {
@@ -274,18 +274,18 @@ void ConvLayer::_GPUZeroGrad()
 
 }
 
-void ConvLayer::_GPUclac_gradient(Onion* loss)
+void ConvLayer::_GPUclac_gradient(Onion& loss)
 {
 
 }
 
-void ConvLayer::_CPUforword(Onion* batch_input)
+void ConvLayer::_CPUforword(Onion& batch_input)
 {
-    double* _wPtr = _w->getdataPtr();
-    double* _bPtr = _b->getdataPtr();
+    double* _wPtr = _w.getdataPtr();
+    double* _bPtr = _b.getdataPtr();
 
-    double* batchinputPtr = batch_input->getdataPtr();
-    double* batchoutputPtr = Layer::batch_output->getdataPtr();
+    double* batchinputPtr = batch_input.getdataPtr();
+    double* batchoutputPtr = Layer::batch_output.getdataPtr();
 
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
@@ -316,30 +316,30 @@ void ConvLayer::_CPUforword(Onion* batch_input)
     }
 }
 
-void ConvLayer::_GPUforword(Onion* batch_input)
+void ConvLayer::_GPUforword(Onion& batch_input)
 {
 
 }
 
 void ConvLayer::initWeight()
 {   
-    std::vector<size_t> wShape = {kernel_num, kernel_r, kernel_c};
-    _w = new Onion(wShape, Layer::datawhere);
-    _w->initdata(-0.1, 0.1);
+    OnionShape wShape = {kernel_num, kernel_r, kernel_c};
+    _w.initOnion(wShape, Layer::datawhere);
+    _w.initdata(-0.1, 0.1);
 
-    std::vector<size_t> bShape = {kernel_num};
-    _b = new Onion(bShape, Layer::datawhere);
-    _b->setAllData(1);
+    OnionShape bShape = {kernel_num};
+    _b.initOnion(bShape, Layer::datawhere);
+    _b.setAllData(1);
 }
 
 void ConvLayer::initGradient()
 {
-    std::vector<size_t> wGradShape = {kernel_num, kernel_r, kernel_c};
-    std::vector<size_t> bGradShape = {kernel_num};
+    OnionShape wGradShape = {kernel_num, kernel_r, kernel_c};
+    OnionShape bGradShape = {kernel_num};
 
-    _w_grad = new Onion(wGradShape, Layer::datawhere);
-    _b_grad = new Onion(bGradShape, Layer::datawhere);
+    _w_grad.initOnion(wGradShape, Layer::datawhere);
+    _b_grad.initOnion(bGradShape, Layer::datawhere);
 
-    _w_grad->setAllData(0);
-    _b_grad->setAllData(0);
+    _w_grad.setAllData(0);
+    _b_grad.setAllData(0);
 }

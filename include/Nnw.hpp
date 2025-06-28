@@ -140,8 +140,8 @@ void NetWork::test(DataLoader* dataLoader)
 
     size_t correctNum = 0;
 
-    std::vector<size_t> sampleShape = {dataLoader->sample_channel, dataLoader->rows, dataLoader->cols};
-    Onion* sampleOnion = new Onion(sampleShape, dataWhere::CPU);
+    OnionShape sampleShape = {dataLoader->sample_channel, dataLoader->rows, dataLoader->cols};
+    Onion sampleOnion = Onion(sampleShape, dataWhere::CPU);
     while(true)
     {
         PicSample* p = dataLoader->getTestSample();
@@ -149,7 +149,7 @@ void NetWork::test(DataLoader* dataLoader)
         {
             break;
         }
-        memcpy(sampleOnion->getdataPtr(), p->getData(), sizeof(double) * sampleOnion->Size());
+        memcpy(sampleOnion.getdataPtr(), p->getData(), sizeof(double) * sampleOnion.Size());
         for (size_t i = 0; i < _layer.size(); ++i)
         {
             if (i == 0)
@@ -232,13 +232,13 @@ void NetWork::initBatch()
 {
     batch = new Batch();
 
-    std::vector<size_t> batchdataShape = {Batch_size, (dataloader->sample_channel), (dataloader->rows), (dataloader->cols)};
-    std::vector<size_t> batchOnebotShape = {Batch_size, (dataloader->class_num)};
-    std::vector<size_t> batchLabelShape = {Batch_size};
+    OnionShape batchdataShape = {Batch_size, (dataloader->sample_channel), (dataloader->rows), (dataloader->cols)};
+    OnionShape batchOnebotShape = {Batch_size, (dataloader->class_num)};
+    OnionShape batchLabelShape = {Batch_size};
 
-    batch->data = new Onion(batchdataShape, dataWhere::CPU);
-    batch->one_bot = new Onion(batchOnebotShape, dataWhere::CPU);
-    batch->Label = new Onion(batchLabelShape, dataWhere::CPU);
+    batch->data.initOnion(batchdataShape, dataWhere::CPU);
+    batch->one_bot.initOnion(batchOnebotShape, dataWhere::CPU);
+    batch->Label.initOnion(batchLabelShape, dataWhere::CPU);
 
     batch->size = Batch_size;
 }
@@ -249,9 +249,9 @@ Batch* NetWork::getBatch()
     // 这司马getBatch写得就是一坨屎
     static auto it = 0;
     
-    double* batchDataPtr = batch->data->getdataPtr();
-    double* batchOneBotPtr = batch->one_bot->getdataPtr();
-    double* batchLabelPtr = batch->Label->getdataPtr();
+    double* batchDataPtr = batch->data.getdataPtr();
+    double* batchOneBotPtr = batch->one_bot.getdataPtr();
+    double* batchLabelPtr = batch->Label.getdataPtr();
 
     for (size_t b = 0; b < Batch_size; ++b)
     {
@@ -261,7 +261,7 @@ Batch* NetWork::getBatch()
             batch->full = true;
 
             double* dataPtr = dataloader->_TrainSample->at(it)->getData();   
-            size_t index = it*batch->data->Size();
+            size_t index = it*batch->data.Size();
             memcpy(batchDataPtr + b*(dataloader->sample_channel)*(dataloader->rows)*(dataloader->cols), dataPtr, (dataloader->sample_channel)*(dataloader->rows)*(dataloader->cols)*sizeof(double)); 
 
             double* OnebotPtr = (dataloader->_TrainSample)->at(it)->getOneBot();

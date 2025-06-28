@@ -9,7 +9,7 @@ std::string LayerName[8] = {
     "RootLayer",
     "StartingLayer",
     "ConvolutionLayer",
-    "PoolingLayer",
+    "MaxPoolingLayer",
     "FullConnectionLayer",
     "ViewLayer",
     "SoftmaxLayer",
@@ -20,11 +20,11 @@ class Layer
 {
 public:
 	// 网络运行时所需要的各层的数据
-	Onion* batch_output = nullptr; 
-	Onion* batch_input = nullptr;
-	Onion* _loss = nullptr;
-	Onion* input = nullptr;
-	Onion* output = nullptr;
+	Onion batch_output; 
+	Onion batch_input;
+	Onion _loss;
+	Onion input;
+	Onion output;
 
 	// 表示该层操作的次数和所用的时间
 	size_t callTimes = 0;
@@ -41,9 +41,9 @@ public:
 	ModelType modelType = ModelType::Inference;    
 
 	// 便于继承和调用
-	virtual void trainForword(Onion* batch_input) = 0;
-	virtual void trainBackword(Onion* loss) = 0;  
-	virtual void _forword(Onion* input) = 0; 
+	virtual void trainForword(Onion& batch_input) = 0;
+	virtual void trainBackword(Onion& loss) = 0;  
+	virtual void _forword(Onion& input) = 0; 
 	virtual void initMatrix(Layer* lastLayer) = 0;
 	
 	size_t batch_size = 0; 

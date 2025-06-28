@@ -9,10 +9,10 @@
 namespace PicImporve
 {
     void Normalization(DataLoader* dataLoader);
-    void Normalization(Onion* o);
+    void Normalization(Onion& o);
 
     void Padding(DataLoader* dataLoader, size_t circles);
-    void Padding(Onion* dataLoader, size_t circles);
+    void Padding(Onion& dataLoader, size_t circles);
 };
 
 #endif

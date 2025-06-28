@@ -31,17 +31,17 @@ void matrixMul(Onion& A, Onion& B, Onion& result)
 
     dim3 threadsPerBlock(); 
     dim3 blocksPerGrid();
-
 }
 
-Onion::Onion() : _data(nullptr)
-{
-
+Onion::Onion(OnionShape& shape, dataWhere where)
+{   
+    initOnion(shape, where);
 }
 
-Onion::Onion(std::vector<size_t>& shape, dataWhere where) : _shape(shape), where(where), _data(nullptr)
+void Onion::initOnion(OnionShape& shape, dataWhere where)
 {
-
+    this->_shape = shape; 
+    this->where = where;
     if (where == dataWhere::GPU)
     {
         isGPU = true;
@@ -63,7 +63,6 @@ Onion::Onion(std::vector<size_t>& shape, dataWhere where) : _shape(shape), where
     {
         createData_GPU();
     }
-
 }
 
 Onion::~Onion()
@@ -74,13 +73,13 @@ Onion::~Onion()
     }
 }
 
-void Onion::CopyData(Onion* onion)
+void Onion::CopyData(const Onion& onion)
 {
-    if (onion->Size() != this->_datasize)
+    if (onion.Size() != this->_datasize)
     {
         throw "can t  copy the data";
     }
-    memcpy(_data, onion->getdataPtr(), sizeof(double) * onion->Size());
+    memcpy(_data, onion.getdataPtr(), sizeof(double) * onion.Size());
 }
 
 
@@ -94,7 +93,22 @@ void Onion::toGPU()
 
 }
 
-double Onion::operator[](size_t index)
+double& Onion::operator[](const size_t index)
+{
+    if (_data != nullptr)
+    {
+        if (index < _datasize)
+        {
+            return _data[index];
+        }
+        else 
+        {
+            throw "out of range";
+        }
+    }
+}
+
+double Onion::operator[](const size_t index) const
 {
     if (_data != nullptr)
     {
@@ -139,7 +153,7 @@ inline double Onion::set(const size_t index, double data) const
     }
 }
 
-double* Onion::getdataPtr()
+double* Onion::getdataPtr() const
 {
     return _data;
 }
@@ -159,7 +173,7 @@ void Onion::initdata(double min, double max)
     }
 }
 
-size_t Onion::Size()
+size_t Onion::Size() const
 {
     return _datasize;
 }

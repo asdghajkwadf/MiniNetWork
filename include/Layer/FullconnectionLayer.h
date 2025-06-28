@@ -13,9 +13,9 @@ public:
     ~FullconnectionLayer();
     
     
-    void trainForword(Onion* batch_input) override;
-    void trainBackword(Onion* loss) override;
-    void _forword(Onion* input) override;
+    void trainForword(Onion& batch_input) override;
+    void trainBackword(Onion& loss) override;
+    void _forword(Onion& input) override;
     void initMatrix(Layer* lastLayer);
 
 
@@ -31,15 +31,15 @@ private:
     // CPU
     void _CPUZeroGrad();
     void _CPUupdate();
-    void _CPUforword(Onion* batch_input);
-    void clac_loss(Onion* batch_output);
-    void _CPUclac_gradient(Onion* nextLayerBatchLoss);
+    void _CPUforword(Onion& batch_input);
+    void clac_loss(Onion& batch_output);
+    void _CPUclac_gradient(Onion& nextLayerBatchLoss);
 
 
     // GPU
-    void _GPUforword(Onion* batch_input);
+    void _GPUforword(Onion& batch_input);
     void _GPUZeroGrad();
-    void _GPUclac_gradient(Onion* nextLayerBatchLoss);
+    void _GPUclac_gradient(Onion& nextLayerBatchLoss);
     void _GPUupdate();
 
 
@@ -48,11 +48,11 @@ private:
     void initWeight();
 
 
-    Onion* _w = nullptr;
-    Onion* _b = nullptr;
+    Onion _w;
+    Onion _b;
 
-    Onion* _w_grad = nullptr;
-    Onion* _b_grad = nullptr;
+    Onion _w_grad;
+    Onion _b_grad;
 };
 
 #include "inl/FullconnectionLayer.hpp"

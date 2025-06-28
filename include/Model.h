@@ -7,7 +7,6 @@ enum LayerType : unsigned char
     StartLayerENUM,
     ConvolutionLayerENUM, 
     MaxPoolingLayerENUM,
-    PoolingLayerENUM,
     FullConnectionLayerENUM,
     ViewLayerENUM,
     SoftmaxLayerENUM,

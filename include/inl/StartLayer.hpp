@@ -31,23 +31,23 @@ void StartLayer::initMatrix(Layer* lastLayer)
     OnionShape lossShape = {Layer::batch_size, channel, out_rows, out_cols};
     OnionShape batchinputShape = {Layer::batch_size, channel, out_rows, out_cols};
 
-    Layer::batch_input = new Onion(batchinputShape, Layer::datawhere);
-    Layer::batch_output = new Onion(batchoutputShape, Layer::datawhere);
-    Layer::_loss = new Onion(lossShape, Layer::datawhere);
+    Layer::batch_input.initOnion(batchinputShape, Layer::datawhere);
+    Layer::batch_output.initOnion(batchoutputShape, Layer::datawhere);
+    Layer::_loss.initOnion(lossShape, Layer::datawhere);
 }
 
 
-void StartLayer::trainForword(Onion* batch_input)
+void StartLayer::trainForword(Onion& batch_input)
 {
-    this->batch_output->CopyData(batch_input);
+    this->batch_output.CopyData(batch_input);
 }
 
-void StartLayer::trainBackword(Onion* loss)
+void StartLayer::trainBackword(Onion& loss)
 {
 
 }    
 
-void StartLayer::_forword(Onion* input)
+void StartLayer::_forword(Onion& input)
 {
     
 }

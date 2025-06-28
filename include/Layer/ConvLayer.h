@@ -18,9 +18,9 @@ public:
     size_t getoutRows() const;
     size_t getoutCols() const;
     
-    void trainForword(Onion* batch_input) override;
-    void trainBackword(Onion* loss) override;
-    void _forword(Onion* input) override;
+    void trainForword(Onion& batch_input) override;
+    void trainBackword(Onion& loss) override;
+    void _forword(Onion& input) override;
     void initMatrix(Layer* lastLayer) override;
 
     size_t in_channel = 0;
@@ -44,23 +44,23 @@ private:
     void initWeight();
     void initGradient();
     
-    void _CPUforword(Onion* batch_input);
-    void _GPUforword(Onion* batch_input);
+    void _CPUforword(Onion& batch_input);
+    void _GPUforword(Onion& batch_input);
 
 
     void _CPUZeroGrad();
-    void _CPUclac_gradient(Onion* loss);
+    void _CPUclac_gradient(Onion& loss);
     void _CPUupdate();
 
     void _GPUZeroGrad();
-    void _GPUclac_gradient(Onion* loss);
+    void _GPUclac_gradient(Onion& loss);
     void _GPUupdate();
 
-    Onion* _w_grad = nullptr;
-    Onion* _b_grad = nullptr;
+    Onion _w_grad;
+    Onion _b_grad;
 
-    Onion* _w = nullptr;
-    Onion* _b = nullptr;
+    Onion _w;
+    Onion _b;
 
 };
 

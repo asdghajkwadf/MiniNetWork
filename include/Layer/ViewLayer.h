@@ -18,9 +18,9 @@ class ViewLayer : public Layer
         size_t output_num = 0;
         void setChannel(size_t channel);
 
-        void trainForword(Onion* batch_input) override;
-        void trainBackword(Onion* loss) override;
-        void _forword(Onion* input) override;
+        void trainForword(Onion& batch_input) override;
+        void trainBackword(Onion& loss) override;
+        void _forword(Onion& input) override;
         void initMatrix(Layer* lastLayer);
 
 
@@ -30,7 +30,6 @@ class ViewLayer : public Layer
     private:
         
         void initWeight();
-        void _view(Onion* input, Onion* output);
 };
 
 #include "inl/ViewLayer.hpp"

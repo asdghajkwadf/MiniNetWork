@@ -15,11 +15,11 @@ class Layer
 {
 public:
 	// 网络运行时所需要的各层的数据
-	Onion* batch_output = nullptr; 
-	Onion* batch_input = nullptr;
-	Onion* _loss = nullptr;
-	Onion* input = nullptr;
-	Onion* output = nullptr;
+	Onion& batch_output = nullptr; 
+	Onion& batch_input = nullptr;
+	Onion& _loss = nullptr;
+	Onion& input = nullptr;
+	Onion& output = nullptr;
 
 	// 表示该层操作的次数和所用的时间
 	size_t callTimes = 0;
@@ -36,9 +36,9 @@ public:
 	ModelType modelType = Inference;    
 
 	// 便于继承和调用
-	virtual void trainForword(Onion* batch_input) = 0;
-	virtual void trainBackword(Onion* loss) = 0;  
-	virtual void _forword(Onion* input) = 0; 
+	virtual void trainForword(Onion& batch_input) = 0;
+	virtual void trainBackword(Onion& loss) = 0;  
+	virtual void _forword(Onion& input) = 0; 
 	virtual void initMatrix(Layer* lastLayer) = 0;
 	
 	size_t batch_size = 0; 
@@ -52,9 +52,9 @@ protected:
 // 存放批次的数据
 struct Batch{
 	size_t batch_index = 0;
-	Onion* data = nullptr;
-	Onion* one_bot = nullptr;
-	Onion* Label = nullptr;
+	Onion& data = nullptr;
+	Onion& one_bot = nullptr;
+	Onion& Label = nullptr;
 	size_t size = 0;
 	bool full = true;
 };
@@ -109,18 +109,18 @@ private:
 };
 ```
 ## 运行中各种数据的处理方式
-**Onion**类似pytorch中的Tensor
+**Onion&*类似pytorch中的Tensor
 可以存储权重，偏置，每一层的误差，原始数据输入等，任何参与计算的数据都要转变为Onion的形式
 ```C++
 class Onion
 {
 	dataWhere where; // 一个枚举变量，指明这个Onion所存储的数据是在CPU还是在GPU上
 	double* _data = nullptr; // 实际的数据指向地址，是一个连续的指针
-	std::vector<size_t> _shape; // 数据的层数结构（二维或者三维）
+	OnionShape _shape; // 数据的层数结构（二维或者三维）
 	size_t _datasize; // 数据的长度
 public:
 	Onion(); // 没什么比用的构造函数
-	Onion(std::vector<size_t>& shape, dataWhere where); // 构造函数要传入shape和datawhere
+	Onion(OnionShape& shape, dataWhere where); // 构造函数要传入shape和datawhere
 	~Onion(); 
 	bool isGPU = false; 
 	double operator[](size_t index); // 重载[]操作，方便调试
@@ -132,7 +132,7 @@ public:
 	double* getdataPtr(); // 返回指向真实数据的指针
 	 
 	size_t Size(); // 返回数据的长度
-	void CopyData(Onion* onion); // 将另一个Onion的数据复制到本Onion中
+	void CopyData(Onion& onion); // 将另一个Onion的数据复制到本Onion中
 	void toGPU(); //把数据转去GPU
 	void toCPU(); //把数据转去CPU
 private:

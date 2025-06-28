@@ -15,34 +15,34 @@ FullconnectionLayer::FullconnectionLayer(size_t output_num)
 
 FullconnectionLayer::~FullconnectionLayer()
 {
-    if (_w != nullptr)
-    {
-        delete _w;
-    }
+    // if (_w != nullptr)
+    // {
+    //     delete _w;
+    // }
 
-    if (_b != nullptr)
-    {
-        delete _b;
-    }
+    // if (_b != nullptr)
+    // {
+    //     delete _b;
+    // }
 
-    if (_w_grad != nullptr)
-    {
-        delete _w_grad;
-    }
+    // if (_w_grad != nullptr)
+    // {
+    //     delete _w_grad;
+    // }
 
-    if (_b_grad != nullptr)
-    {
-        delete _b_grad;
-    }
+    // if (_b_grad != nullptr)
+    // {
+    //     delete _b_grad;
+    // }
 }
 
-void FullconnectionLayer::_forword(Onion* input)
+void FullconnectionLayer::_forword(Onion& input)
 {
-    double* inputPtr = input->getdataPtr();
-    double* outputPtr = Layer::output->getdataPtr();
+    double* inputPtr = input.getdataPtr();
+    double* outputPtr = Layer::output.getdataPtr();
 
-    double* wPtr = _w->getdataPtr();
-    double* bPtr = _b->getdataPtr();
+    double* wPtr = _w.getdataPtr();
+    double* bPtr = _b.getdataPtr();
 
     for (size_t out = 0; out < output_num; out++)
     {
@@ -55,9 +55,9 @@ void FullconnectionLayer::_forword(Onion* input)
     }
 }
 
-void FullconnectionLayer::trainForword(Onion* batch_input)
+void FullconnectionLayer::trainForword(Onion& batch_input)
 {
-    Layer::batch_input->CopyData(batch_input);
+    Layer::batch_input.CopyData(batch_input);
     if (Layer::datawhere == dataWhere::CPU)
     {
         _CPUforword(batch_input);
@@ -68,10 +68,10 @@ void FullconnectionLayer::trainForword(Onion* batch_input)
     }
 }
 
-void FullconnectionLayer::trainBackword(Onion* loss)
+void FullconnectionLayer::trainBackword(Onion& loss)
 {
     Timer t(this);
-    // double* p = loss->getdataPtr();
+    // double* p = loss.getdataPtr();
     if (Layer::datawhere == dataWhere::CPU)
     {
         _CPUZeroGrad();
@@ -91,7 +91,7 @@ void FullconnectionLayer::_GPUZeroGrad()
 
 }
 
-void FullconnectionLayer::_GPUclac_gradient(Onion* loss)
+void FullconnectionLayer::_GPUclac_gradient(Onion& loss)
 {
 
 }
@@ -101,7 +101,7 @@ void FullconnectionLayer::_GPUupdate()
 
 }
 
-void FullconnectionLayer::_GPUforword(Onion* batch_input)
+void FullconnectionLayer::_GPUforword(Onion& batch_input)
 {
 
 }
@@ -111,23 +111,23 @@ void FullconnectionLayer::_GPUforword(Onion* batch_input)
 
 void FullconnectionLayer::_CPUZeroGrad()
 {
-    _w_grad->setAllData(0);
-    _b_grad->setAllData(0);
-    Layer::_loss->setAllData(0);
+    _w_grad.setAllData(0);
+    _b_grad.setAllData(0);
+    Layer::_loss.setAllData(0);
 }
 
-void FullconnectionLayer::_CPUclac_gradient(Onion* nextLayerBatchLoss)
+void FullconnectionLayer::_CPUclac_gradient(Onion& nextLayerBatchLoss)
 {
-    double* nextLayerBatchLossPtr = nextLayerBatchLoss->getdataPtr();
-    double* batchinputPtr = Layer::batch_input->getdataPtr();
+    double* nextLayerBatchLossPtr = nextLayerBatchLoss.getdataPtr();
+    double* batchinputPtr = Layer::batch_input.getdataPtr();
 
-    double* wPtr = _w->getdataPtr();
-    double* bPtr = _b->getdataPtr();
+    double* wPtr = _w.getdataPtr();
+    double* bPtr = _b.getdataPtr();
 
-    double* wGradPtr = _w_grad->getdataPtr();
-    double* bGradPtr = _b_grad->getdataPtr();
+    double* wGradPtr = _w_grad.getdataPtr();
+    double* bGradPtr = _b_grad.getdataPtr();
 
-    double* lossPtr = Layer::_loss->getdataPtr();
+    double* lossPtr = Layer::_loss.getdataPtr();
 
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
@@ -170,11 +170,11 @@ void FullconnectionLayer::_CPUclac_gradient(Onion* nextLayerBatchLoss)
 
 void FullconnectionLayer::_CPUupdate()
 {
-    double* wGradPtr = _w_grad->getdataPtr();
-    double* bGradPtr = _b_grad->getdataPtr();
+    double* wGradPtr = _w_grad.getdataPtr();
+    double* bGradPtr = _b_grad.getdataPtr();
 
-    double* wPtr = _w->getdataPtr();
-    double* bPtr = _b->getdataPtr();
+    double* wPtr = _w.getdataPtr();
+    double* bPtr = _b.getdataPtr();
     for (size_t b = 0; b < output_num; ++b)
     {
         bPtr[b] -= bGradPtr[b] * Layer::lr;
@@ -189,13 +189,13 @@ void FullconnectionLayer::_CPUupdate()
     }
 }
 
-void FullconnectionLayer::_CPUforword(Onion* batch_input)
+void FullconnectionLayer::_CPUforword(Onion& batch_input)
 {   
-    double* batchinputPtr = batch_input->getdataPtr();
-    double* batchoutputPtr = Layer::batch_output->getdataPtr();
+    double* batchinputPtr = batch_input.getdataPtr();
+    double* batchoutputPtr = Layer::batch_output.getdataPtr();
 
-    double* wPtr = _w->getdataPtr();
-    double* bPtr = _b->getdataPtr();
+    double* wPtr = _w.getdataPtr();
+    double* bPtr = _b.getdataPtr();
 
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
@@ -218,20 +218,20 @@ void FullconnectionLayer::_CPUforword(Onion* batch_input)
 
 void FullconnectionLayer::initGradient()
 {
-    std::vector<size_t> _w_grad_Shape = {output_num, input_num};
-    std::vector<size_t> _b_grad_Shape = {output_num};
-    _w_grad = new Onion(_w_grad_Shape, Layer::datawhere);
-    _b_grad = new Onion(_b_grad_Shape, Layer::datawhere);
+    OnionShape _w_grad_Shape = {output_num, input_num};
+    OnionShape _b_grad_Shape = {output_num};
+    _w_grad.initOnion(_w_grad_Shape, Layer::datawhere);
+    _b_grad.initOnion(_b_grad_Shape, Layer::datawhere);
 }
 
 void FullconnectionLayer::initWeight()
 {
-    std::vector<size_t> w_Shape = {output_num, input_num};
-    std::vector<size_t> b_Shape = {output_num};
-    _w = new Onion(w_Shape, Layer::datawhere);
-    _b = new Onion(b_Shape, Layer::datawhere);
-    _w->initdata(-0.05, 0.05);
-    _b->initdata(-0.05, 0.05);
+    OnionShape w_Shape = {output_num, input_num};
+    OnionShape b_Shape = {output_num};
+    _w.initOnion(w_Shape, Layer::datawhere);
+    _b.initOnion(b_Shape, Layer::datawhere);
+    _w.initdata(-0.05, 0.05);
+    _b.initdata(-0.05, 0.05);
 }
 
 void FullconnectionLayer::initMatrix(Layer* lastLayer)
@@ -268,9 +268,9 @@ void FullconnectionLayer::initMatrix(Layer* lastLayer)
 
         OnionShape lossShape = {Layer::batch_size, input_num};
 
-        Layer::batch_input = new Onion(batchinputShape, Layer::datawhere);
-        Layer::batch_output = new Onion(batchoutputShape, Layer::datawhere);
-        Layer::_loss = new Onion(lossShape, Layer::datawhere);
+        Layer::batch_input.initOnion(batchinputShape, Layer::datawhere);
+        Layer::batch_output.initOnion(batchoutputShape, Layer::datawhere);
+        Layer::_loss.initOnion(lossShape, Layer::datawhere);
 
         initWeight();
         initGradient();
@@ -280,8 +280,8 @@ void FullconnectionLayer::initMatrix(Layer* lastLayer)
         OnionShape inputShape = {input_num};
         OnionShape outputShape = {output_num};
 
-        Layer::input = new Onion(inputShape, Layer::datawhere);
-        Layer::output = new Onion(outputShape, Layer::datawhere);
+        Layer::input.initOnion(inputShape, Layer::datawhere);
+        Layer::output.initOnion(outputShape, Layer::datawhere);
     }
 }
 

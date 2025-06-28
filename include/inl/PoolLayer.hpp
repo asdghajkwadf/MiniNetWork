@@ -12,15 +12,15 @@ MaxPoolLayer::MaxPoolLayer(size_t pooling_rows, size_t pooling_cols)
     this->pooling_rows = pooling_rows;
     this->pooling_cols = pooling_cols;
 
-    Layer::layerType = LayerType::PoolingLayerENUM;
+    Layer::layerType = LayerType::MaxPoolingLayerENUM;
 }
 
 MaxPoolLayer::~MaxPoolLayer()
 {
-    if (max_index != nullptr)
-    {
-        delete max_index;
-    }
+    // if (max_index != nullptr)
+    // {
+    //     delete max_index;
+    // }
 }
 
 void* MaxPoolLayer::getWeight()
@@ -32,7 +32,7 @@ void MaxPoolLayer::initMatrix(Layer* lastLayer)
 {
     Layer::batch_size = lastLayer->batch_size;
 
-    if (lastLayer->layerType == LayerType::PoolingLayerENUM)
+    if (lastLayer->layerType == LayerType::MaxPoolingLayerENUM)
     {
         throw "fuck you !!!";
     }
@@ -59,28 +59,27 @@ void MaxPoolLayer::initMatrix(Layer* lastLayer)
         OnionShape batchoutputShape = {Layer::batch_size, channel, out_rows, out_cols};
         OnionShape batchinputShape = {Layer::batch_size, channel, in_rows, in_cols};
 
-        std::vector<size_t> maxindexShape = {Layer::batch_size, channel, out_rows, out_cols};
+        OnionShape maxindexShape = {Layer::batch_size, channel, out_rows, out_cols};
 
-        Layer::_loss = new Onion(lossShape, Layer::datawhere);
-        Layer::batch_output = new Onion(batchoutputShape, Layer::datawhere);
-        Layer::batch_input = new Onion(batchinputShape, Layer::datawhere);
-
-        max_index = new Onion(maxindexShape, Layer::datawhere);
+        Layer::_loss.initOnion(lossShape, Layer::datawhere);
+        Layer::batch_output.initOnion(batchoutputShape, Layer::datawhere);
+        Layer::batch_input.initOnion(batchinputShape, Layer::datawhere);
+        max_index.initOnion(maxindexShape, Layer::datawhere);
     }
     else if (Layer::modelType == ModelType::Inference)
     {
         OnionShape inputShape = {channel, in_rows, in_cols};
         OnionShape outputShape = {channel, out_rows, out_cols};
 
-        Layer::input = new Onion(inputShape, Layer::datawhere);
-        Layer::output = new Onion(outputShape, Layer::datawhere);
+        Layer::input.initOnion(inputShape, Layer::datawhere);
+        Layer::output.initOnion(outputShape, Layer::datawhere);
     }
 
 }
 
-void MaxPoolLayer::trainForword(Onion* batch_input)
+void MaxPoolLayer::trainForword(Onion& batch_input)
 {
-    Layer::batch_input->CopyData(batch_input);
+    Layer::batch_input.CopyData(batch_input);
     if (Layer::datawhere == dataWhere::CPU)
     {
         _CPUpooling(batch_input);
@@ -91,10 +90,10 @@ void MaxPoolLayer::trainForword(Onion* batch_input)
     }
 }
 
-void MaxPoolLayer::_forword(Onion* input)
+void MaxPoolLayer::_forword(Onion& input)
 {
-    double* inputPtr = input->getdataPtr();
-    double* outputPtr = Layer::output->getdataPtr();
+    double* inputPtr = input.getdataPtr();
+    double* outputPtr = Layer::output.getdataPtr();
 
     for (size_t cha = 0; cha < channel; ++cha)
     {
@@ -124,7 +123,7 @@ void MaxPoolLayer::_forword(Onion* input)
     
 }
 
-void MaxPoolLayer::trainBackword(Onion* loss)
+void MaxPoolLayer::trainBackword(Onion& loss)
 {
     Timer t(this);
     if (Layer::datawhere == dataWhere::CPU)
@@ -141,19 +140,19 @@ void MaxPoolLayer::trainBackword(Onion* loss)
 
 void MaxPoolLayer::_CPUZeroGrad()
 {
-    Layer::_loss->setAllData(0);
+    Layer::_loss.setAllData(0);
 }
-void MaxPoolLayer::clac_loss(Onion* batch_output)
+void MaxPoolLayer::clac_loss(Onion& batch_output)
 {
 
 }
-void MaxPoolLayer::_CPUclac_gradient(Onion* nextLayerBatchLoss)
+void MaxPoolLayer::_CPUclac_gradient(Onion& nextLayerBatchLoss)
 {
-    double* lossPtr = Layer::_loss->getdataPtr();
-    double* nextLossPtr = nextLayerBatchLoss->getdataPtr();
-    double* maxIndexPtr = this->max_index->getdataPtr();
+    double* lossPtr = Layer::_loss.getdataPtr();
+    double* nextLossPtr = nextLayerBatchLoss.getdataPtr();
+    double* maxIndexPtr = this->max_index.getdataPtr();
 
-    for (size_t i = 0; i < max_index->Size(); ++i)
+    for (size_t i = 0; i < max_index.Size(); ++i)
     {
         size_t lossindex = (size_t)maxIndexPtr[i];
         lossPtr[lossindex] = nextLossPtr[i];
@@ -166,7 +165,7 @@ void MaxPoolLayer::_GPUZeroGrad()
 {
 
 }
-void MaxPoolLayer::_GPUclac_gradient(Onion* nextLayerBatchLoss)
+void MaxPoolLayer::_GPUclac_gradient(Onion& nextLayerBatchLoss)
 {
 
 }
@@ -175,11 +174,11 @@ void MaxPoolLayer::_GPUupdate()
 
 }
 
-void MaxPoolLayer::_CPUpooling(Onion* batch_input)
+void MaxPoolLayer::_CPUpooling(Onion& batch_input)
 {
-    double* batchinputPtr = batch_input->getdataPtr();
-    double* batchoutputPtr = Layer::batch_output->getdataPtr();
-    double* maxIndexPtr = this->max_index->getdataPtr();
+    double* batchinputPtr = batch_input.getdataPtr();
+    double* batchoutputPtr = Layer::batch_output.getdataPtr();
+    double* maxIndexPtr = this->max_index.getdataPtr();
 
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
@@ -213,7 +212,7 @@ void MaxPoolLayer::_CPUpooling(Onion* batch_input)
     }    
 }
 
-void MaxPoolLayer::_GPUpooling(Onion* batch_input)
+void MaxPoolLayer::_GPUpooling(Onion& batch_input)
 {
 
 }

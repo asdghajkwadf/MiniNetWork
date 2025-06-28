@@ -14,9 +14,9 @@ public:
 
     void setBatchSize(size_t batch_size);
 
-    void trainForword(Onion* batch_input) override;
-	void trainBackword(Onion* loss) override;  
-	void _forword(Onion* input) override; 
+    void trainForword(Onion& batch_input) override;
+	void trainBackword(Onion& loss) override;  
+	void _forword(Onion& input) override; 
 	void initMatrix(Layer* lastLayer) override;
 
     size_t channel = 1;

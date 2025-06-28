@@ -32,25 +32,25 @@ void SoftmaxLayer::initMatrix(Layer* lastLayer)
     if (Layer::modelType == ModelType::Train)
     {
         OnionShape batchoutput_shape = {Layer::batch_size, oneBot_num};
-        batch_output = new Onion(batchoutput_shape, Layer::datawhere);
+        batch_output.initOnion(batchoutput_shape, Layer::datawhere);
         
         OnionShape loss_shape = {Layer::batch_size, oneBot_num};
-        _loss = new Onion(loss_shape, Layer::datawhere);
+        _loss.initOnion(loss_shape, Layer::datawhere);
     }
     else if (Layer::modelType == ModelType::Inference)
     {
         OnionShape inputShape = {oneBot_num};
         OnionShape outputShape = {oneBot_num};
 
-        Layer::input = new Onion(inputShape, Layer::datawhere);
-        Layer::output = new Onion(outputShape, Layer::datawhere);
+        Layer::input.initOnion(inputShape, Layer::datawhere);
+        Layer::output.initOnion(outputShape, Layer::datawhere);
     }
 }
 
-void SoftmaxLayer::_forword(Onion* input)
+void SoftmaxLayer::_forword(Onion& input)
 {
-    double* inputPtr = input->getdataPtr();
-    double* outputPtr = Layer::output->getdataPtr();
+    double* inputPtr = input.getdataPtr();
+    double* outputPtr = Layer::output.getdataPtr();
     double total = 0;
     for(size_t i = 0; i < oneBot_num; ++i)
     {
@@ -84,7 +84,7 @@ result SoftmaxLayer::getResult()
     return r;
 }
 
-void SoftmaxLayer::trainForword(Onion* batch_input)
+void SoftmaxLayer::trainForword(Onion& batch_input)
 {
     if (Layer::datawhere == dataWhere::CPU)
     {
@@ -96,7 +96,7 @@ void SoftmaxLayer::trainForword(Onion* batch_input)
     }
 }
 
-void SoftmaxLayer::trainBackword(Onion* Label)
+void SoftmaxLayer::trainBackword(Onion& Label)
 {
     Timer t(this);
     if (Layer::datawhere == dataWhere::CPU)
@@ -111,24 +111,21 @@ void SoftmaxLayer::trainBackword(Onion* Label)
     }
 }
 
-void SoftmaxLayer::CPUclac_loss(Onion* Label)
+void SoftmaxLayer::CPUclac_loss(Onion& Label)
 {
-    double* labelPtr = Label->getdataPtr();
-    double* lossPtr = Layer::_loss->getdataPtr();
-    double* batchoutputPtr = Layer::batch_output->getdataPtr();
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
         for (size_t o = 0; o < oneBot_num; ++o)
         {
-            if (o == labelPtr[b])
+            if (o == Label[b])
             {
-                lossPtr[b*oneBot_num + o] = batchoutputPtr[b*oneBot_num + o] - 1;
+                Layer::_loss[b*oneBot_num + o] = Layer::batch_output[b*oneBot_num + o] - 1;
                 // std::std::cout << batchoutputPtr[b*oneBot_num + o] << " " << loss_sum << std::endl;
-                loss_sum += -log(batchoutputPtr[b*oneBot_num + o]);
+                loss_sum += -log(Layer::batch_output[b*oneBot_num + o]);
             }
             else 
             {
-                lossPtr[b*oneBot_num + o] = (batchoutputPtr[b*oneBot_num + o]);
+                Layer::_loss[b*oneBot_num + o] = (Layer::batch_output[b*oneBot_num + o]);
             }
             // std::std::cout << batchoutputPtr[b*oneBot_num + o] << " ";
         }
@@ -137,10 +134,10 @@ void SoftmaxLayer::CPUclac_loss(Onion* Label)
     // std::std::cout << std::endl << std::endl;;
 }
 
-void SoftmaxLayer::CPUforword(Onion* batch_input)
+void SoftmaxLayer::CPUforword(Onion& batch_input)
 {
-    double* batchinputPtr = batch_input->getdataPtr();
-    double* batchoutputPtr = Layer::batch_output->getdataPtr();
+    double* batchinputPtr = batch_input.getdataPtr();
+    double* batchoutputPtr = Layer::batch_output.getdataPtr();
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
         double total = 0;
@@ -161,7 +158,7 @@ void SoftmaxLayer::CPUforword(Onion* batch_input)
 
 void SoftmaxLayer::CPUZeroGrad()
 {
-    _loss->setAllData(0);
+    _loss.setAllData(0);
 }
 
 void SoftmaxLayer::GPUZeroGrad()
@@ -169,7 +166,7 @@ void SoftmaxLayer::GPUZeroGrad()
 
 }
 
-void  SoftmaxLayer::GPUclac_loss(Onion* Label)
+void  SoftmaxLayer::GPUclac_loss(Onion& Label)
 {
 
 }

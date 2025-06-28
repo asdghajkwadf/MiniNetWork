@@ -14,9 +14,9 @@ public:
 
     void* getWeight();
 
-    void trainForword(Onion* batch_input) override;
-    void trainBackword(Onion* loss) override;
-    void _forword(Onion* input) override;
+    void trainForword(Onion& batch_input) override;
+    void trainBackword(Onion& loss) override;
+    void _forword(Onion& input) override;
     void initMatrix(Layer* lastLayer);
 
     size_t channel = 0;
@@ -29,22 +29,22 @@ public:
 
 private:
 
-    Onion* max_index = nullptr;
+    Onion max_index;
 
     void initWeight();
 
-    void _CPUpooling(Onion* batch_input);
-    void _GPUpooling(Onion* batch_input);
+    void _CPUpooling(Onion& batch_input);
+    void _GPUpooling(Onion& batch_input);
 
     // CPU
     void _CPUZeroGrad();
-    void clac_loss(Onion* batch_output);
-    void _CPUclac_gradient(Onion* nextLayerBatchLoss);
+    void clac_loss(Onion& batch_output);
+    void _CPUclac_gradient(Onion& nextLayerBatchLoss);
 
 
     // GPU
     void _GPUZeroGrad();
-    void _GPUclac_gradient(Onion* nextLayerBatchLoss);
+    void _GPUclac_gradient(Onion& nextLayerBatchLoss);
     void _GPUupdate();
 
     size_t _r_times = 0;

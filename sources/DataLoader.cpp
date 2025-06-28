@@ -59,7 +59,7 @@ void CopyMem(double* dst, double* src, size_t dst_num, size_t src_num)
         throw "error accur";
     }
 
-    // memcpy(dst + it*batch->data->Size()*sizeof(double), src, batch->data->Size()*sizeof(double));    
+    // memcpy(dst + it*batch->data.Size()*sizeof(double), src, batch->data.Size()*sizeof(double));    
 }
 
 

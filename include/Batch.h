@@ -9,9 +9,9 @@
 struct Batch
 {
     size_t batch_index = 0;
-    Onion* data = nullptr;
-    Onion* one_bot = nullptr;
-    Onion* Label = nullptr; 
+    Onion data;
+    Onion one_bot;
+    Onion Label; 
     size_t size = 0;
     bool full = true;
 };
