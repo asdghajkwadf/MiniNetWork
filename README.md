@@ -1,5 +1,5 @@
 # MiniNetWork
-一个纯手搓(没有用到任何第三方库)的神经网络框架，包含卷积，池化，全连接，展平，ReLU激活，SoftMax归一化等操作的框架，框架内部包括了训练时的批次向前传播，反向传播，和测试的向前，在未来更新之后也可用于加载权重数据进行推理
+一个纯手搓的神经网络框架，包含卷积，池化，全连接，展平，ReLU激活，SoftMax归一化等操作的框架，框架内部包括了训练时的批次向前传播，反向传播，和测试的向前，在未来更新之后也可用于加载权重数据进行推理
 
 ## 项目目录
 **data**: 用于存放数据集，每个子文件夹为一个类别(可以有多个类别)
@@ -216,5 +216,5 @@ size_t main(size_t)
 }
 ```
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTMwNzM0MzU4Miw0Mzc5MDE2MTldfQ==
+eyJoaXN0b3J5IjpbLTQzNzI2MTA4Niw0Mzc5MDE2MTldfQ==
 -->
