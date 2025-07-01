@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <iostream>
-
+#include <Eigen/Dense>
 
 double rand_num(double min, double max);
 
@@ -24,6 +24,9 @@ class Onion
 	OnionShape _shape; // 数据的层数结构（二维或者三维）
 	size_t _datasize; // 数据的长度
 
+	double* _testGPUdata = nullptr;
+	Eigen::MatrixXd* _testEigenData = nullptr;
+
 public:
     // 没什么比用的构造函数
 	Onion() = default; 
@@ -36,6 +39,10 @@ public:
 	bool isGPU = false; 
 	double& operator[](const size_t index); // 重载[]操作，方便调试
 	double operator[](const size_t index) const;
+	// double Multip(const Onion& onion) const;
+	void __divide__(const double n) const;
+	void __add__(const double n) const;
+ 
 	void initdata(double min, double max); // 通常用来初始化权重和偏置
 	void setAllData(double data); // 通常用来Zerodata
 	double get(const size_t index) const; //
@@ -51,6 +58,10 @@ public:
 	void toCPU(); //把数据转去CPU
     
 private:
+
+	double* _getCPUdataPtr();
+	double* _getGPUdataPtr();
+
 	void createData_CPU();
 	void createData_GPU();
 	void applyGPUMem(size_t size);

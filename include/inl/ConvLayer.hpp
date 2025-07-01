@@ -1,6 +1,4 @@
 #include "ConvLayer.h"
-#include "Onion.h"
-
 
 #include "Layer.h"
 #include "PoolLayer.h"
@@ -42,8 +40,9 @@ size_t ConvLayer::getoutCols() const
     return out_cols;
 }
 
-void ConvLayer::initMatrix(Layer* lastLayer)
+void ConvLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {   
+    Layer::datawhere = where;
     Layer::batch_size = lastLayer->batch_size;
     if (lastLayer->layerType == LayerType::StartLayerENUM)
     {
@@ -161,7 +160,7 @@ void ConvLayer::trainForword(Onion& batch_input)
 
 void ConvLayer::trainBackword(Onion& loss)
 {   
-    Timer t(this);
+    
     if (Layer::datawhere == dataWhere::CPU)
     {
         _CPUZeroGrad();
@@ -295,7 +294,7 @@ void ConvLayer::initWeight()
 {   
     OnionShape wShape = {kernel_num, kernel_r, kernel_c};
     _w.initOnion(wShape, Layer::datawhere);
-    _w.initdata(-0.5, 0.5);
+    _w.initdata(-1, 1);
 
     OnionShape bShape = {kernel_num};
     _b.initOnion(bShape, Layer::datawhere);

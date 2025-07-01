@@ -15,10 +15,10 @@ ReluLayer::~ReluLayer()
 {
 }
 
-void ReluLayer::initMatrix(Layer* lastLayer)
+void ReluLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {
     Layer::batch_size = lastLayer->batch_size;
-
+    Layer::datawhere = where;
     if (lastLayer->layerType == LayerType::ConvolutionLayerENUM)
     {
         ConvLayer* c = static_cast<ConvLayer*>(lastLayer);
@@ -90,7 +90,7 @@ void ReluLayer::trainForword(Onion& batch_input)
 
 void ReluLayer::trainBackword(Onion& loss)
 {
-    Timer t(this);
+    
     if (Layer::datawhere == dataWhere::CPU)
     {
         CPUZeroGrad();

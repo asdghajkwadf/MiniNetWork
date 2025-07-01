@@ -28,10 +28,10 @@ void* MaxPoolLayer::getWeight()
     throw "Pooling Layer no Weight , SB";
 }
 
-void MaxPoolLayer::initMatrix(Layer* lastLayer)
+void MaxPoolLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {
     Layer::batch_size = lastLayer->batch_size;
-
+    Layer::datawhere = where;
     if (lastLayer->layerType == LayerType::MaxPoolingLayerENUM)
     {
         throw "fuck you !!!";
@@ -115,12 +115,11 @@ void MaxPoolLayer::_forword(Onion& input)
             }
         }
     }
-    
 }
 
 void MaxPoolLayer::trainBackword(Onion& loss)
 {
-    Timer t(this);
+    
     if (Layer::datawhere == dataWhere::CPU)
     {
         _CPUZeroGrad();

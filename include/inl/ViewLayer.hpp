@@ -19,10 +19,10 @@ void ViewLayer::setChannel(size_t channel)
     this->in_channel = channel;
 }
 
-void ViewLayer::initMatrix(Layer* lastLayer)
+void ViewLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {
     Layer::batch_size = lastLayer->batch_size;
-
+    Layer::datawhere = where;
     if (lastLayer->layerType == LayerType::MaxPoolingLayerENUM)
     {
         MaxPoolLayer* p = static_cast<MaxPoolLayer*>(lastLayer);
@@ -81,7 +81,7 @@ void ViewLayer::_forword(Onion& input)
 
 void ViewLayer::trainBackword(Onion& loss)
 {
-    Timer t(this);
+    
     if (Layer::datawhere == dataWhere::CPU)
     {
         Layer::_loss.CopyData(loss);

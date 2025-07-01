@@ -44,7 +44,7 @@ public:
 	virtual void trainForword(Onion& batch_input) = 0;
 	virtual void trainBackword(Onion& loss) = 0;  
 	virtual void _forword(Onion& input) = 0; 
-	virtual void initMatrix(Layer* lastLayer) = 0;
+	virtual void initMatrix(Layer* lastLayer, dataWhere where) = 0;
 	
 	size_t batch_size = 0; 
 	double lr = 0.001; 

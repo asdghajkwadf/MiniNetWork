@@ -21,7 +21,7 @@ public:
     NetWork(ModelType type);
     ~NetWork();
 
-    void train(size_t epoch, double lr, DataLoader* dataLoader, size_t batch_size);
+    void train(size_t epoch, double lr, DataLoader* dataLoader, size_t batch_size, dataWhere where = dataWhere::CPU);
     void test(DataLoader* dataLoader);
 
     ModelType NetWorlType = Inference;
@@ -50,6 +50,8 @@ private:
 
     void initLayerMatrix();
     // double*** input = nullptr;
+
+    dataWhere where = dataWhere::CPU;
 
     std::vector<Layer*> _reverseLayer;
     std::vector<Layer*> _layer; 

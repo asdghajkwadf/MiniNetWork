@@ -2,8 +2,8 @@
 #include <vector>
 #include <random>
 #include <cmath>
-
-using namespace std;
+#include <cuda_runtime.h>
+#include "CudaKernel/cudaFunc.cuh"
 #include <cuda_runtime.h>
 
 double rand_num(double min, double max)
@@ -75,22 +75,49 @@ Onion::~Onion()
 
 void Onion::CopyData(const Onion& onion)
 {
+    if (where != onion.where)
+    {
+        throw "Copy Onion no in the same devide ! ";
+    }
     if (onion.Size() != this->_datasize)
     {
-        throw "can t  copy the data";
+        throw "can t  copy the data, because the datasize no the same";
     }
-    memcpy(_data, onion.getdataPtr(), sizeof(double) * onion.Size());
+    if (where == dataWhere::CPU)
+    {
+        memcpy(_data, onion.getdataPtr(), sizeof(double) * onion.Size());
+    }
+    else if (where == dataWhere::GPU)
+    {
+        cudaMemcpy(this->_testGPUdata, onion.getdataPtr(), sizeof(double) * _datasize, cudaMemcpyDeviceToDevice);
+    }
 }
 
 
 void Onion::toCPU()
 {
-
+    if (where == dataWhere::GPU)
+    {
+        cudaMemcpy(_getCPUdataPtr(), _getGPUdataPtr(), _datasize * sizeof(double), cudaMemcpyDeviceToHost);
+    }
+    else 
+    {
+        throw " funk you ";
+    }
+    where = dataWhere::CPU;
 }
 
 void Onion::toGPU()
 {
-
+    if (where == dataWhere::CPU)
+    {
+        cudaMemcpy(_getGPUdataPtr(), _getCPUdataPtr(), _datasize * sizeof(double), cudaMemcpyHostToDevice);
+    }
+    else 
+    {
+        throw " funk you ";
+    }
+    where = dataWhere::GPU;
 }
 
 double& Onion::operator[](const size_t index)
@@ -122,6 +149,46 @@ double Onion::operator[](const size_t index) const
         }
     }
 }
+
+void Onion::__divide__(const double n) const
+{
+    if (n == 0)
+    {
+        throw "fuck you, 你是不是没上过小学，除数不能为零";
+    }
+    if (where == dataWhere::CPU)
+    {
+        for (auto i = 0; i < _datasize; ++i)
+        {
+            _data[i] = _data[i] / n;
+        }
+    }
+    else if (where == dataWhere::GPU)
+    {
+        Common::Arrays_divide_arrays(_testGPUdata, n, _datasize);
+    }
+}
+
+// 暂时为开放该接口
+void Onion::__add__(const double n) const
+{
+    if (n == 0)
+    {
+        throw "fuck you, 加0有什么意义吗";
+    }
+    if (where == dataWhere::CPU)
+    {
+        for (auto i = 0; i < _datasize; ++i)
+        {
+            _data[i] += n;
+        }
+    }
+    else if (where == dataWhere::GPU)
+    {
+        // Common::Arrays_add_a_number(_testGPUdata, n, _datasize);
+    }
+}
+
 
 inline double Onion::get(const size_t index) const
 {
@@ -155,7 +222,18 @@ inline double Onion::set(const size_t index, double data) const
 
 double* Onion::getdataPtr() const
 {
-    return _data;
+    if (where == dataWhere::CPU)
+    {
+        return _data;
+    }
+    else if (where == dataWhere::GPU)
+    {
+        return _testGPUdata;
+    }
+    else 
+    {
+        throw " ";
+    }
 }
 
 void Onion::initdata(double min, double max)
@@ -180,16 +258,16 @@ size_t Onion::Size() const
 
 void Onion::setAllData(double data)
 {
-    if (isGPU)
-    {
-
-    }
-    else
+    if (where == dataWhere::CPU)
     {
         for (size_t i = 0; i < _datasize; ++i)
         {
             _data[i] = 0;
         }
+    }
+    else if (where == dataWhere::GPU)
+    {
+        cudaMemset(_testGPUdata, 0, _datasize * sizeof(double));
     }
 }
 
@@ -200,7 +278,7 @@ void Onion::createData_CPU()
 
 void Onion::createData_GPU()
 {
-    cudaMalloc(&_data, _datasize * sizeof(double));
+    cudaMalloc(&_testGPUdata, _datasize * sizeof(double));
 }
 
 void Onion::applyGPUMem(size_t size)
@@ -209,4 +287,22 @@ void Onion::applyGPUMem(size_t size)
     {
         throw "have data, you can create a new";
     }
+}
+
+double* Onion::_getCPUdataPtr()
+{
+    if (_data == nullptr)
+    {
+        createData_CPU();
+    }
+    return _data;
+}
+
+double* Onion::_getGPUdataPtr()
+{
+    if (_testGPUdata == nullptr)
+    {
+        createData_GPU();
+    }
+    return _testGPUdata;
 }

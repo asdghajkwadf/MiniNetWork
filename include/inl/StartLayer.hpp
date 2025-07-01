@@ -25,8 +25,9 @@ void StartLayer::setBatchSize(size_t batch_size)
     Layer::batch_size = batch_size;
 }
 
-void StartLayer::initMatrix(Layer* lastLayer)
+void StartLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {
+    Layer::datawhere = where;
     OnionShape batchoutputShape = {Layer::batch_size, channel, out_rows, out_cols};
     OnionShape lossShape = {Layer::batch_size, channel, out_rows, out_cols};
     OnionShape batchinputShape = {Layer::batch_size, channel, out_rows, out_cols};

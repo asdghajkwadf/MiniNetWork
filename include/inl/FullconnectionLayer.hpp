@@ -6,11 +6,14 @@
 #include "SoftMaxLayer.h"
 #include <iostream>
 #include "Timer/Timer.h"
+#include "CudaKernel/cudaFunc.cuh"
 
 FullconnectionLayer::FullconnectionLayer(size_t output_num)
 {
     Layer::layerType = FullConnectionLayerENUM;
     this->output_num = output_num;
+
+    CHECK_CUBLAS_ERROR(cublasCreate(&cuBLAShandle));
 }
 
 FullconnectionLayer::~FullconnectionLayer()
@@ -62,43 +65,157 @@ void FullconnectionLayer::trainForword(Onion& batch_input)
     }
 }
 
+
 void FullconnectionLayer::trainBackword(Onion& loss)
 {
-    Timer t(this);
-    // double* p = loss.getdataPtr();
     if (Layer::datawhere == dataWhere::CPU)
     {
+        Timer t(this);
         _CPUZeroGrad();
         _CPUclac_gradient(loss);
         _CPUupdate();
     }
     else if (Layer::datawhere == dataWhere::GPU)
     {
+        _w_grad.toGPU();
+        _b_grad.toGPU();
+        _w.toGPU();
+        _b.toGPU();
+        Layer::_loss.toGPU();
+        Layer::batch_input.toGPU();
+        loss.toGPU();
+
+
         _GPUZeroGrad();
         _GPUclac_gradient(loss);
         _GPUupdate();
+
+
+
+        _w_grad.toCPU();
+        _b_grad.toCPU();
+        _w.toCPU();
+        _b.toCPU();
+        Layer::_loss.toCPU();
+        Layer::batch_input.toCPU();
+        loss.toCPU();
     }
 }
 
 void FullconnectionLayer::_GPUZeroGrad()
 {
-
+    Layer::_loss.setAllData(0);
+    _w_grad.setAllData(0);
+    _b_grad.setAllData(0);
 }
 
-void FullconnectionLayer::_GPUclac_gradient(Onion& loss)
+void FullconnectionLayer::_GPUclac_gradient(Onion& nextLayerBatchLoss)
 {
+    const double alpha = 1.0;
+    const double beta = 0.0;
+
+    // 计算w的梯度
+    cublasStatus_t status = cublasDgemm(
+        cuBLAShandle,
+        CUBLAS_OP_N,      
+        CUBLAS_OP_T,   
+        output_num,     
+        input_num,          
+        Layer::batch_size,     
+        &alpha,
+        nextLayerBatchLoss.getdataPtr(),       
+        output_num,     
+        Layer::batch_input.getdataPtr(),            
+        input_num,   
+        &beta,
+        _w_grad.getdataPtr(),       
+        output_num     
+    );
+
+    status = cublasDgemm(
+        cuBLAShandle,
+        CUBLAS_OP_T,   
+        CUBLAS_OP_N,   
+        batch_size,   
+        input_num,    
+        output_num,    
+        &alpha,
+        _w.getdataPtr(),         
+        output_num,   
+        nextLayerBatchLoss.getdataPtr(),        
+        output_num,    
+        &beta,
+        Layer::_loss.getdataPtr(),         
+        input_num    
+    );
+
+
+    // 计算b的梯度
+    FullconnecttionKernelFunc::AverageNextloss(nextLayerBatchLoss.getdataPtr(), _b_grad.getdataPtr(), Layer::batch_size, output_num);
+
+    // 由于上面的矩阵相乘是把所有梯度都加上去了，要除平均梯度
+    _w_grad.__divide__(Layer::batch_size);
+    _b_grad.__divide__(Layer::batch_size);
 
 }
 
 void FullconnectionLayer::_GPUupdate()
 {
-
+    Common::update_weight(_w.getdataPtr(), _w_grad.getdataPtr(), _w.Size(), Layer::lr);
+    Common::update_weight(_b.getdataPtr(), _b_grad.getdataPtr(), _b.Size(), Layer::lr);
 }
 
 void FullconnectionLayer::_GPUforword()
 {
+    _w.toGPU();
+    _b.toGPU();
+    Layer::batch_output.toGPU();
+    Layer::batch_input.toGPU();
 
+    const double alpha = 1.0;
+    const double beta = 0.0;
+
+    cublasStatus_t status = cublasDgemm(
+        cuBLAShandle,
+        CUBLAS_OP_N,        // Transpose weight matrix (for row-major data)
+        CUBLAS_OP_N,        // Transpose input matrix (for row-major data)
+        output_num,     // Rows of resulting matrix (output^T)
+        Layer::batch_size,          // Columns of resulting matrix (output^T)
+        input_num,      // Common dimension
+        &alpha,
+        _w.getdataPtr(),          // Weight matrix (device pointer)
+        output_num,     // Leading dimension of weight matrix (original rows)
+        Layer::batch_input.getdataPtr(),            // Input matrix (device pointer)
+        input_num,     // Leading dimension of input matrix (original rows)
+        &beta,
+        Layer::batch_output.getdataPtr(),           // Output matrix (device pointer)
+        output_num     // Leading dimension of output matrix
+    );
+
+    FullconnecttionKernelFunc::batch_ouput_add_b(Layer::batch_output.getdataPtr(), 
+                                                _b.getdataPtr(),
+                                                Layer::batch_size,
+                                                output_num
+                                            );
+
+    _w.toCPU();
+    _b.toCPU();
+    Layer::batch_output.toCPU();
+    Layer::batch_input.toCPU();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void FullconnectionLayer::_CPUZeroGrad()
 {
@@ -111,18 +228,16 @@ void FullconnectionLayer::_CPUclac_gradient(Onion& nextLayerBatchLoss)
 {
     for (size_t b = 0; b < Layer::batch_size; ++b)
     {
-        for (size_t r = 0; r < output_num; ++r)
+        for (size_t out = 0; out < output_num; ++out)
         {
-            for (size_t c = 0; c < input_num; ++c)  
+            for (size_t in = 0; in < input_num; ++in)  
             {
-                Layer::_loss[b*input_num + c] += nextLayerBatchLoss[b*output_num + r] * _w[r*input_num + c];    
-                _w_grad[r*input_num + c] += nextLayerBatchLoss[b*output_num + r] * Layer::batch_input[b*input_num + c] / Layer::batch_size;
+                Layer::_loss[b*input_num + in] += nextLayerBatchLoss[b*output_num + out] * _w[in*output_num + out];    
+                _w_grad[in*output_num + out] += nextLayerBatchLoss[b*output_num + out] * Layer::batch_input[b*input_num + in] / Layer::batch_size;
             }
-            _w_grad[r] += nextLayerBatchLoss[b*output_num + r] / Layer::batch_size;
+            _b_grad[out] += nextLayerBatchLoss[b*output_num + out] / Layer::batch_size;
         }
     }
-
-
 
 
     // for (size_t b = 0; b < Layer::batch_size; ++b)
@@ -173,14 +288,12 @@ void FullconnectionLayer::_CPUforword()
             double _sum = 0;
             for (size_t in = 0; in < input_num; in++)
             {
-                _sum += _w[out*input_num + in] * Layer::batch_input[b*input_num + in];
+                _sum += Layer::batch_input[b*input_num + in] * _w[in*output_num + out];
             }
             Layer::batch_output[b*output_num + out] = _sum + _b[out];
         }
     }
 }
-
-
 
 
 
@@ -203,10 +316,10 @@ void FullconnectionLayer::initWeight()
     _b.setAllData(0);
 }
 
-void FullconnectionLayer::initMatrix(Layer* lastLayer)
+void FullconnectionLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {
     Layer::batch_size = lastLayer->batch_size;
-
+    Layer::datawhere = where;
     if (lastLayer->layerType == LayerType::ViewLayerENUM)
     {
         ViewLayer* v = static_cast<ViewLayer*>(lastLayer);

@@ -21,7 +21,7 @@ public:
     void trainForword(Onion& batch_input) override;
     void trainBackword(Onion& loss) override;
     void _forword(Onion& input) override;
-    void initMatrix(Layer* lastLayer) override;
+    void initMatrix(Layer* lastLayer, dataWhere where) override;
 
     size_t in_channel = 0;
     size_t out_channel = 0;

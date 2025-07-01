@@ -14,10 +14,10 @@ SoftmaxLayer::~SoftmaxLayer()
 {
 }
 
-void SoftmaxLayer::initMatrix(Layer* lastLayer)
+void SoftmaxLayer::initMatrix(Layer* lastLayer, dataWhere where)
 {
     Layer::batch_size = lastLayer->batch_size;
-
+    Layer::datawhere = where;
     
     if (lastLayer->layerType == LayerType::FullConnectionLayerENUM)
     {
@@ -99,7 +99,7 @@ void SoftmaxLayer::trainForword(Onion& batch_input)
 
 void SoftmaxLayer::trainBackword(Onion& Label)
 {
-    Timer t(this);
+    
     if (Layer::datawhere == dataWhere::CPU)
     {
         CPUZeroGrad();

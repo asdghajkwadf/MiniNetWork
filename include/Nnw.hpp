@@ -88,11 +88,11 @@ void NetWork::initLayerMatrix()
             StartLayer* s = new StartLayer(dataloader);
             _layer.insert(_layer.begin(), s);
             s->batch_size = _Batch_Size();
-            s->initMatrix(nullptr);
+            s->initMatrix(nullptr, this->where);
         }
         else
         {
-            _layer.at(i)->initMatrix(_layer[i-1]);
+            _layer.at(i)->initMatrix(_layer[i-1], this->where);
         }
     }
 }
@@ -105,9 +105,10 @@ void NetWork::moveData(dataWhere where)
     }
 }
 
-void NetWork::train(size_t epoch, double lr, DataLoader* dataLoader,  size_t batch_size)
+void NetWork::train(size_t epoch, double lr, DataLoader* dataLoader,  size_t batch_size, dataWhere where)
 {
-    Batch_size = batch_size;
+    this->Batch_size = batch_size;
+    this->where = where;
     this->dataloader = dataLoader;
     this->lr = lr;
     setMpdelType(ModelType::Train);
@@ -190,7 +191,7 @@ void NetWork::Train_forword(Batch* batch)
 
 void NetWork::Train_backword(Batch* batch)
 {
-    for (size_t l = 0; l < _layer.size(); ++l)
+    for (size_t l = 0; l < 5; ++l)
     {
         if (l == 0)
         {

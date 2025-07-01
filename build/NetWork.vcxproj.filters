@@ -15,6 +15,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\sources\cudaFunc.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="D:\DATA\NetWork\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
